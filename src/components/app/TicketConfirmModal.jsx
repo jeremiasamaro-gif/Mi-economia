@@ -43,6 +43,17 @@ export default function TicketConfirmModal({ result, onConfirm, onCancel }) {
         </div>
 
         <div className="p-5 space-y-3">
+          {/* Alerta si no se pudo leer el total */}
+          {result.totalNotFound && (
+            <div className="flex items-start gap-2 bg-red-500/10 border border-red-500/30 text-red-300 text-xs px-3 py-2.5 rounded-lg">
+              <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+              <div>
+                <p className="font-medium">No se pudo leer el total</p>
+                <p className="text-red-300/70 mt-0.5">Ingresá el monto a mano en el campo Total.</p>
+              </div>
+            </div>
+          )}
+
           {/* Alerta si el comercio no fue encontrado */}
           {!businessFound && (
             <div className="flex items-start gap-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 text-xs px-3 py-2.5 rounded-lg">
@@ -70,13 +81,17 @@ export default function TicketConfirmModal({ result, onConfirm, onCancel }) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-dark-muted block mb-1">Total</label>
+              <label className="text-xs text-dark-muted block mb-1">
+                Total {result.totalNotFound && <span className="text-red-400">— ingresá a mano</span>}
+              </label>
               <input
                 type="number"
                 value={data.amount}
                 onChange={(e) => setData({ ...data, amount: Number(e.target.value) })}
                 min="0"
-                className="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-accent"
+                className={`w-full bg-dark-bg border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-accent ${
+                  result.totalNotFound ? 'border-red-500/50' : 'border-dark-border'
+                }`}
               />
             </div>
             <div>
