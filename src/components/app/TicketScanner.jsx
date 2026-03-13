@@ -143,7 +143,7 @@ export default function TicketScanner({ isOpen, onClose, onExpenseAdded }) {
             {mode === 'select' && (
               <div className="space-y-3">
                 <p className="text-sm text-dark-muted mb-4">
-                  Escaneá un ticket o factura para crear un gasto automáticamente.
+                  Sacale una foto al ticket o subí una imagen. Leemos el total y el comercio automáticamente.
                 </p>
                 <button
                   onClick={startCamera}

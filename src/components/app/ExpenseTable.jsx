@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Plus, Trash2, Edit3, Check, X, Tag, Users, ScanLine } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { Plus, Trash2, Edit3, Check, X, Tag, Users, PenLine, ScanLine } from 'lucide-react'
 import { useExpenses } from '../../hooks/useExpenses'
 import { usePlan } from '../../hooks/usePlan'
 import { CATEGORIES } from '../../store/mockData'
@@ -14,9 +14,11 @@ export default function ExpenseTable() {
   const { maxExpenses, isPro, canUseTags, canUseSplitting, canUseScanner } = usePlan()
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
+  const [showAddMenu, setShowAddMenu] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [editData, setEditData] = useState({})
   const [showAdd, setShowAdd] = useState(false)
+  const addMenuRef = useRef(null)
   const [newExpense, setNewExpense] = useState({
     date: new Date().toISOString().split('T')[0],
     category: 'Otros',
@@ -69,6 +71,18 @@ export default function ExpenseTable() {
     setTagInput('')
   }
 
+  // Cerrar menú al hacer clic fuera
+  useEffect(() => {
+    if (!showAddMenu) return
+    const handleClick = (e) => {
+      if (addMenuRef.current && !addMenuRef.current.contains(e.target)) {
+        setShowAddMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showAddMenu])
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -81,20 +95,47 @@ export default function ExpenseTable() {
             </p>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="relative" ref={addMenuRef}>
           <button
-            onClick={() => canUseScanner ? setShowScanner(true) : setShowUpgrade(true)}
-            className="flex items-center gap-2 border border-accent text-accent px-3 py-2 rounded-lg text-sm font-semibold hover:bg-accent/10"
-            title="Escanear ticket"
-          >
-            <ScanLine size={16} />
-          </button>
-          <button
-            onClick={() => (canAdd ? setShowAdd(!showAdd) : setShowUpgrade(true))}
+            onClick={() => setShowAddMenu(!showAddMenu)}
             className="flex items-center gap-2 bg-accent text-dark-bg px-4 py-2 rounded-lg text-sm font-semibold hover:bg-accent/90"
           >
             <Plus size={16} /> Agregar
           </button>
+
+          {showAddMenu && (
+            <div className="absolute right-0 top-full mt-2 w-56 bg-dark-surface border border-dark-border rounded-xl shadow-lg z-30 overflow-hidden">
+              <button
+                onClick={() => {
+                  setShowAddMenu(false)
+                  if (canAdd) setShowAdd(true)
+                  else setShowUpgrade(true)
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-dark-hover transition-colors text-left"
+              >
+                <PenLine size={18} className="text-accent" />
+                <div>
+                  <p className="text-sm font-medium">Cargar a mano</p>
+                  <p className="text-[11px] text-dark-muted">Completá los datos vos mismo</p>
+                </div>
+              </button>
+              <div className="border-t border-dark-border" />
+              <button
+                onClick={() => {
+                  setShowAddMenu(false)
+                  if (canUseScanner) setShowScanner(true)
+                  else setShowUpgrade(true)
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-dark-hover transition-colors text-left"
+              >
+                <ScanLine size={18} className="text-accent" />
+                <div>
+                  <p className="text-sm font-medium">Escanear ticket</p>
+                  <p className="text-[11px] text-dark-muted">Foto o cámara — lee el total automático</p>
+                </div>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

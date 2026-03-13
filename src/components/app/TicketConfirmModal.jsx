@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Check, X } from 'lucide-react'
+import { Check, X, AlertTriangle } from 'lucide-react'
 import { CATEGORIES } from '../../store/mockData'
 
 const formatARS = (n) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 
 export default function TicketConfirmModal({ result, onConfirm, onCancel }) {
+  const businessFound = result.businessFound !== false
   const [data, setData] = useState({
     description: result.store || '',
     amount: result.total || 0,
@@ -42,6 +43,19 @@ export default function TicketConfirmModal({ result, onConfirm, onCancel }) {
         </div>
 
         <div className="p-5 space-y-3">
+          {/* Alerta si el comercio no fue encontrado */}
+          {!businessFound && (
+            <div className="flex items-start gap-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 text-xs px-3 py-2.5 rounded-lg">
+              <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+              <div>
+                <p className="font-medium">Comercio no encontrado</p>
+                <p className="text-yellow-300/70 mt-0.5">
+                  No reconocimos "{result.razonSocial}". Revisá la descripción y elegí la categoría a mano.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="text-xs text-dark-muted block mb-1">Comercio / Descripción</label>
             <input
@@ -49,12 +63,14 @@ export default function TicketConfirmModal({ result, onConfirm, onCancel }) {
               value={data.description}
               onChange={(e) => setData({ ...data, description: e.target.value })}
               maxLength={200}
-              className="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent"
+              className={`w-full bg-dark-bg border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent ${
+                !businessFound ? 'border-yellow-500/50' : 'border-dark-border'
+              }`}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-dark-muted block mb-1">Monto</label>
+              <label className="text-xs text-dark-muted block mb-1">Total</label>
               <input
                 type="number"
                 value={data.amount}
@@ -74,11 +90,15 @@ export default function TicketConfirmModal({ result, onConfirm, onCancel }) {
             </div>
           </div>
           <div>
-            <label className="text-xs text-dark-muted block mb-1">Categoría</label>
+            <label className="text-xs text-dark-muted block mb-1">
+              Categoría {!businessFound && <span className="text-yellow-400 ml-1">— elegí a mano</span>}
+            </label>
             <select
               value={data.category}
               onChange={(e) => setData({ ...data, category: e.target.value })}
-              className="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent"
+              className={`w-full bg-dark-bg border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent ${
+                !businessFound ? 'border-yellow-500/50' : 'border-dark-border'
+              }`}
             >
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>{c}</option>
@@ -87,7 +107,8 @@ export default function TicketConfirmModal({ result, onConfirm, onCancel }) {
           </div>
 
           <div className="text-xs text-dark-muted bg-dark-bg rounded-lg px-3 py-2">
-            Detectado: <span className="font-mono text-accent">{formatARS(result.total)}</span> en <span className="font-medium text-dark-text">{result.store}</span>
+            <p>Razón social: <span className="font-mono text-dark-text">{result.razonSocial || result.store}</span></p>
+            <p className="mt-0.5">Total leído: <span className="font-mono text-accent">{formatARS(result.total)}</span></p>
           </div>
         </div>
 

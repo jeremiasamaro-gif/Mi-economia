@@ -82,13 +82,87 @@
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 const MAX_FILE_SIZE = 3 * 1024 * 1024 // 3MB
 
+// Base de datos de comercios conocidos → categoría
+// TODO SUPABASE: mover a una tabla `known_businesses` en la base de datos
+// para que se pueda actualizar sin deploy
+const KNOWN_BUSINESSES = {
+  // Supermercados
+  'coto': { category: 'Alimentación', displayName: 'Supermercado Coto' },
+  'jumbo': { category: 'Alimentación', displayName: 'Jumbo' },
+  'disco': { category: 'Alimentación', displayName: 'Disco' },
+  'carrefour': { category: 'Alimentación', displayName: 'Carrefour' },
+  'dia': { category: 'Alimentación', displayName: 'Supermercado Día' },
+  'changomas': { category: 'Alimentación', displayName: 'Changomas' },
+  'vea': { category: 'Alimentación', displayName: 'Vea' },
+  'la anonima': { category: 'Alimentación', displayName: 'La Anónima' },
+  // Farmacias
+  'farmacity': { category: 'Salud', displayName: 'Farmacity' },
+  'farmacia del pueblo': { category: 'Salud', displayName: 'Farmacia del Pueblo' },
+  // Combustible / Transporte
+  'ypf': { category: 'Transporte', displayName: 'YPF' },
+  'shell': { category: 'Transporte', displayName: 'Shell' },
+  'axion': { category: 'Transporte', displayName: 'Axion Energy' },
+  'puma': { category: 'Transporte', displayName: 'Puma Energy' },
+  // Servicios
+  'edenor': { category: 'Servicios', displayName: 'Edenor' },
+  'edesur': { category: 'Servicios', displayName: 'Edesur' },
+  'metrogas': { category: 'Servicios', displayName: 'Metrogas' },
+  'aysa': { category: 'Servicios', displayName: 'AySA' },
+  'telecom': { category: 'Servicios', displayName: 'Telecom' },
+  'personal': { category: 'Servicios', displayName: 'Personal' },
+  'movistar': { category: 'Servicios', displayName: 'Movistar' },
+  'claro': { category: 'Servicios', displayName: 'Claro' },
+  'fibertel': { category: 'Servicios', displayName: 'Fibertel' },
+  // Entretenimiento / Comida afuera
+  'mcdonalds': { category: 'Entretenimiento', displayName: 'McDonald\'s' },
+  'burger king': { category: 'Entretenimiento', displayName: 'Burger King' },
+  'starbucks': { category: 'Entretenimiento', displayName: 'Starbucks' },
+  'rappi': { category: 'Entretenimiento', displayName: 'Rappi' },
+  'pedidosya': { category: 'Entretenimiento', displayName: 'PedidosYa' },
+  // Indumentaria
+  'zara': { category: 'Ropa', displayName: 'Zara' },
+  'nike': { category: 'Ropa', displayName: 'Nike' },
+  'adidas': { category: 'Ropa', displayName: 'Adidas' },
+  'falabella': { category: 'Ropa', displayName: 'Falabella' },
+  // Educación
+  'udemy': { category: 'Educación', displayName: 'Udemy' },
+  'coursera': { category: 'Educación', displayName: 'Coursera' },
+}
+
+/**
+ * Busca un comercio en la base de datos de conocidos.
+ * Compara el nombre extraído contra las claves conocidas.
+ * @param {string} razonSocial - Nombre/razón social leído del ticket
+ * @returns {{ found: boolean, category: string|null, displayName: string|null }}
+ */
+export function lookupBusiness(razonSocial) {
+  if (!razonSocial || typeof razonSocial !== 'string') {
+    return { found: false, category: null, displayName: null }
+  }
+
+  const normalized = razonSocial.toLowerCase().trim()
+
+  // Buscar coincidencia exacta o parcial en las claves conocidas
+  for (const [key, data] of Object.entries(KNOWN_BUSINESSES)) {
+    if (normalized.includes(key) || key.includes(normalized)) {
+      return { found: true, category: data.category, displayName: data.displayName }
+    }
+  }
+
+  return { found: false, category: null, displayName: null }
+}
+
 /**
  * Escanea un ticket/factura y extrae datos de gasto.
  * En producción, esto llama a una Edge Function que usa Claude Vision.
  * En desarrollo, devuelve datos mock después de un delay simulado.
  *
+ * IMPORTANTE: Solo se extrae el campo TOTAL del ticket (no subtotal ni IVA).
+ * Si no se puede leer el ticket, se devuelve un error honesto.
+ * Si la razón social no se encuentra, se marca como no encontrada.
+ *
  * @param {File} imageFile - Archivo de imagen del ticket
- * @returns {Promise<{ store: string, total: number, date: string, category: string, confidence: number }>}
+ * @returns {Promise<{ razonSocial: string, store: string, total: number, date: string, category: string, confidence: number, businessFound: boolean }>}
  */
 export async function scanTicket(imageFile) {
   // Validar que sea un archivo
@@ -124,19 +198,50 @@ export async function scanTicket(imageFile) {
   //   const err = await response.json()
   //   throw new Error(err.error || 'Error al escanear el ticket')
   // }
-  // return response.json()
+  // const data = response.json()
+  //
+  // // Buscar razón social en la base de comercios conocidos
+  // const lookup = lookupBusiness(data.razonSocial)
+  // return {
+  //   ...data,
+  //   businessFound: lookup.found,
+  //   category: lookup.found ? lookup.category : 'Otros',
+  //   store: lookup.found ? lookup.displayName : data.razonSocial,
+  // }
 
   // Mock: simular delay de procesamiento (1500-2500ms)
   const delay = 1500 + Math.random() * 1000
   await new Promise((resolve) => setTimeout(resolve, delay))
 
-  // Mock: devolver datos de ejemplo
+  // TODO SUPABASE: en producción, Claude Vision extrae:
+  // 1. Razón social / nombre del establecimiento (campo superior del ticket)
+  // 2. TOTAL (solo la línea que dice TOTAL, no subtotal ni IVA)
+  // 3. Fecha del ticket
+  // Prompt de Claude: "Extraé SOLO: 1. Razón social o nombre del comercio 2. El monto de la línea TOTAL (no subtotal, no IVA, solo TOTAL) 3. Fecha. Si no podés leer algún campo, devolvé null para ese campo. NO inventes datos."
+
+  // Mock: simular diferentes escenarios realistas
+  const scenarios = [
+    // Comercio conocido - alta confianza
+    { razonSocial: 'COTO CICSA', total: 15430, confidence: 0.92 },
+    { razonSocial: 'JUMBO RETAIL ARG SA', total: 28750, confidence: 0.88 },
+    { razonSocial: 'FARMACITY SA', total: 8200, confidence: 0.90 },
+    { razonSocial: 'YPF SA', total: 22000, confidence: 0.95 },
+    // Comercio NO conocido - el usuario debe categorizar a mano
+    { razonSocial: 'PANADERIA DON JULIO SRL', total: 4500, confidence: 0.85 },
+    { razonSocial: 'FERRETERIA MARTINEZ', total: 12300, confidence: 0.78 },
+  ]
+
+  const scenario = scenarios[Math.floor(Math.random() * scenarios.length)]
+  const lookup = lookupBusiness(scenario.razonSocial)
   const today = new Date().toISOString().split('T')[0]
+
   return {
-    store: 'Supermercado Coto',
-    total: 15430,
+    razonSocial: scenario.razonSocial,
+    store: lookup.found ? lookup.displayName : scenario.razonSocial,
+    total: scenario.total,
     date: today,
-    category: 'Alimentación',
-    confidence: 0.92,
+    category: lookup.found ? lookup.category : 'Otros',
+    confidence: scenario.confidence,
+    businessFound: lookup.found,
   }
 }
