@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Read(//usr/local/bin/**)",
+      "Read(//Users/jeremiasamaro/**)",
+      "Bash(export PATH=\"/Users/jeremiasamaro/.local/node/bin:$PATH\")",
+      "Bash(npm --version)",
+      "Bash(npx create-vite@5.5.0 . --template react)",
+      "Bash(npm install:*)",
+      "Bash(npx vite:*)",
+      "mcp__Claude_Preview__preview_start"
+    ]
+  }
+}
