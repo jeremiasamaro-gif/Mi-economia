@@ -51,17 +51,33 @@ const useChatStore = create((set, get) => ({
     // Mock AI response
     await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 1500))
 
-    const mockResponses = [
-      `Analizando tus gastos del mes, veo que tu categoría más alta es **Vivienda** con $150.000 (alquiler). Representan el ${((150000 / 340000) * 100).toFixed(0)}% de tus gastos totales. Te recomiendo revisar si hay opciones más económicas o si podés negociar el precio.`,
-      `Basándome en tu historial de los últimos 3 meses, tus gastos en **Alimentación** han subido un 15%. Esto puede deberse a la inflación, pero te sugiero comparar precios entre supermercados y aprovechar ofertas.`,
-      `Tu balance este mes es positivo: ingresás $535.000 y gastás aproximadamente $340.000. Tenés un margen de ahorro de ~$195.000. ¿Querés que te arme un plan de ahorro?`,
-      `Detecté que tenés gastos recurrentes por $202.500/mes (alquiler + servicios + streaming). Eso representa el 38% de tus ingresos. Es un ratio saludable, pero estate atento a aumentos.`,
-      `Tu gasto en **Entretenimiento** este mes ($19.000) está dentro del presupuesto de $25.000. Te quedan $6.000 disponibles. ¡Vas bien! 🎯`,
-    ]
+    let responseContent
+
+    if (!expenseContext || expenseContext.totalExpenses === 0) {
+      // No data — fun, professional, non-offensive responses
+      const noDataResponses = [
+        '¡Ey! Todavía no tenés gastos cargados este mes. Soy muy bueno analizando finanzas, pero necesito datos para trabajar. Andá a la tabla de gastos y cargá algunos, ¡así puedo darte consejos de verdad!',
+        '¡Hola! Veo que tu cuenta está más vacía que billetera de fin de mes. Cargá tus gastos en la tabla y volvé, que tengo muchos consejos esperándote.',
+        'Mmm... no encuentro gastos cargados todavía. Sin datos soy como un contador sin calculadora. ¡Cargá tus gastos y vamos a poner tus finanzas en orden!',
+        '¡Buenas! Tu historial está en cero. Empezá a cargar tus gastos en la tabla y después charlamos sobre cómo optimizar tu plata. ¡Te espero!',
+      ]
+      responseContent = noDataResponses[Math.floor(Math.random() * noDataResponses.length)]
+    } else {
+      // Has data — friendly, advisory, firm responses
+      const withDataResponses = [
+        `Mirá, analizando tus ${expenseContext.totalExpenses} gastos del mes, tu categoría más pesada es **Vivienda**. Esto es normal, pero si supera el 35% de tus ingresos, te conviene buscar alternativas. No te digo que te mudes mañana, pero tenerlo presente ayuda.`,
+        `Vi tus números y hay algo que quiero que sepas: tus gastos en **Alimentación** vienen subiendo. La inflación pega, sí, pero también es donde más se puede optimizar. Compará precios, aprovechá ofertas y, sobre todo, evitá las compras impulsivas.`,
+        `Buena noticia: tu balance este mes está en positivo. Eso ya es un logro. Ahora, mi consejo firme: ese excedente no lo dejes quieto en la cuenta. Armemos un plan de ahorro para que esa plata trabaje para vos.`,
+        `Tenés gastos recurrentes que suman bastante. No está mal, son servicios que usás, pero revisalos cada tanto. ¿Seguís usando todas esas suscripciones? A veces pagamos cosas por inercia. Hacé una limpieza y tu bolsillo te lo va a agradecer.`,
+        `¡Bien ahí! Tus gastos en **Entretenimiento** están controlados este mes. Disfrutar también es parte del plan, siempre y cuando sea con conciencia. Seguí así que vas por buen camino.`,
+        `Te soy sincero: los gastos hormiga son traicioneros. Esos cafecitos, delivery, compras chicas... sumados pegan fuerte. Revisá los montos más chicos de tu tabla, te vas a sorprender.`,
+      ]
+      responseContent = withDataResponses[Math.floor(Math.random() * withDataResponses.length)]
+    }
 
     const aiMessage = {
       role: 'assistant',
-      content: mockResponses[Math.floor(Math.random() * mockResponses.length)],
+      content: responseContent,
       timestamp: new Date().toISOString(),
     }
 

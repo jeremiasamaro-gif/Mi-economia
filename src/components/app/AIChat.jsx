@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
-import { MessageSquare, Send, X, Loader2, Lock, Sparkles, Trash2 } from 'lucide-react'
+import { Send, X, Loader2, Lock, Trash2 } from 'lucide-react'
 import useChatStore from '../../store/chatStore'
 import { usePlan } from '../../hooks/usePlan'
 import { useExpenses } from '../../hooks/useExpenses'
 import UpgradeModal from '../shared/UpgradeModal'
+import FoxAvatar from '../shared/FoxAvatar'
 
 const QUICK_PROMPTS = [
   '¿En qué gasto más?',
@@ -44,9 +45,10 @@ export default function AIChat() {
       <>
         <button
           onClick={() => setShowUpgrade(true)}
-          className="fixed right-4 bottom-4 w-14 h-14 bg-dark-surface border border-dark-border rounded-full flex items-center justify-center shadow-lg hover:border-accent z-40"
+          className="fixed right-4 bottom-4 w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform z-40"
         >
-          <Lock size={20} className="text-dark-muted" />
+          <FoxAvatar size={56} />
+          <Lock size={14} className="absolute bottom-0 right-0 text-dark-bg bg-dark-muted rounded-full p-0.5" />
         </button>
         <UpgradeModal isOpen={showUpgrade} onClose={() => setShowUpgrade(false)} feature="Asistente IA" />
       </>
@@ -59,9 +61,9 @@ export default function AIChat() {
       {!isOpen && (
         <button
           onClick={toggleChat}
-          className="fixed right-4 bottom-4 w-14 h-14 bg-accent text-dark-bg rounded-full flex items-center justify-center shadow-lg hover:bg-accent/90 z-40"
+          className="fixed right-4 bottom-4 w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-40"
         >
-          <MessageSquare size={22} />
+          <FoxAvatar size={56} />
         </button>
       )}
 
@@ -71,7 +73,7 @@ export default function AIChat() {
           {/* Header */}
           <div className="p-4 border-b border-dark-border flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles size={18} className="text-accent" />
+              <FoxAvatar size={28} />
               <h3 className="font-semibold text-sm">
                 Econom<span className="text-accent">IA</span>
               </h3>
@@ -94,9 +96,9 @@ export default function AIChat() {
             {messages.length === 0 && (
               <div className="space-y-3">
                 <div className="text-center py-4">
-                  <Sparkles size={32} className="mx-auto text-accent mb-3" />
+                  <FoxAvatar size={48} className="mx-auto mb-3" />
                   <p className="text-sm text-dark-muted">
-                    Soy tu asistente financiero. Preguntame lo que quieras sobre tus gastos.
+                    ¡Hola! Soy tu asistente financiero. Preguntame lo que quieras sobre tus gastos.
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -114,9 +116,10 @@ export default function AIChat() {
             )}
 
             {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start gap-2'}`}>
+                {msg.role === 'assistant' && <FoxAvatar size={24} className="flex-shrink-0 mt-1" />}
                 <div
-                  className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
+                  className={`max-w-[80%] rounded-xl px-3 py-2 text-sm ${
                     msg.role === 'user'
                       ? 'bg-accent text-dark-bg rounded-br-sm'
                       : 'bg-dark-bg border border-dark-border rounded-bl-sm'
@@ -138,7 +141,8 @@ export default function AIChat() {
             ))}
 
             {loading && (
-              <div className="flex justify-start">
+              <div className="flex justify-start gap-2">
+                <FoxAvatar size={24} className="flex-shrink-0 mt-1" />
                 <div className="bg-dark-bg border border-dark-border rounded-xl px-4 py-3 rounded-bl-sm">
                   <Loader2 size={16} className="animate-spin text-accent" />
                 </div>
