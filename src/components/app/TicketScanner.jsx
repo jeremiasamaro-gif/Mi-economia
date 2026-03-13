@@ -217,7 +217,7 @@ export default function TicketScanner({ isOpen, onClose, onExpenseAdded }) {
                     disabled={scanning || !canScan}
                     className="flex-1 bg-accent text-dark-bg py-2 rounded-lg text-sm font-semibold hover:bg-accent/90 disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {scanning ? <><Loader2 size={16} className="animate-spin" /> Escaneando...</> : 'Escanear'}
+                    {scanning ? <><Loader2 size={16} className="animate-spin" /> Leyendo ticket...</> : 'Escanear'}
                   </button>
                 </div>
               </div>

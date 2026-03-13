@@ -1,83 +1,7 @@
-// Ticket Scanner — mock endpoint para desarrollo
-// TODO SUPABASE: reemplazar con llamada a Edge Function real
-//
-// ============================================================
-// EDGE FUNCTION: supabase/functions/scan-ticket/index.ts
-// ============================================================
-//
-// import { serve } from 'https://deno.land/std/http/server.ts'
-// import { createClient } from '@supabase/supabase-js'
-// import Anthropic from '@anthropic-ai/sdk'
-//
-// const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') })
-// const supabase = createClient(Deno.env.get('SUPABASE_URL'), Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'))
-//
-// serve(async (req) => {
-//   // 1. AUTENTICACIÓN Y PLAN
-//   //    - Extraer JWT del header Authorization: Bearer <token>
-//   //    - Verificar con supabase.auth.getUser(token)
-//   //    - Consultar plan del usuario — solo Pro puede escanear
-//   //    - Si no es Pro, devolver 403 { error: 'Función disponible solo en plan Pro' }
-//
-//   // 2. RATE LIMITING
-//   //    - Consultar tabla scan_usage: SELECT count(*) FROM scan_usage
-//   //      WHERE user_id = $1 AND created_at >= CURRENT_DATE
-//   //    - Máximo 10 escaneos por día por usuario
-//   //    - Si se excede, devolver 429 { error: 'Límite de escaneos alcanzado (10/día)' }
-//   //    - Insertar registro en scan_usage al completar el escaneo
-//
-//   // 3. VALIDACIÓN DE ARCHIVO
-//   //    - Recibir archivo como multipart/form-data
-//   //    - Validar tipo de archivo por MAGIC BYTES (no confiar en Content-Type del header):
-//   //      - JPEG: bytes 0-1 = FF D8
-//   //      - PNG: bytes 0-3 = 89 50 4E 47
-//   //      - WebP: bytes 0-3 = 52 49 46 46 + bytes 8-11 = 57 45 42 50
-//   //    - Tamaño máximo: 3MB (3 * 1024 * 1024 bytes)
-//   //    - Si la validación falla, devolver 400 { error: 'Formato de archivo no válido' }
-//
-//   // 4. LIMPIEZA DE METADATA
-//   //    - Stripear toda la metadata EXIF del archivo antes de procesar
-//   //    - EXIF puede contener: ubicación GPS, modelo de dispositivo, fecha/hora, etc.
-//   //    - Usar librería como 'piexifjs' o leer solo los bytes de imagen sin EXIF
-//   //    - NUNCA almacenar la imagen original ni procesada — solo mantener en memoria
-//
-//   // 5. ENVÍO A CLAUDE VISION API
-//   //    - Convertir imagen a base64
-//   //    - Llamar a anthropic.messages.create({
-//   //        model: 'claude-sonnet-4-20250514',
-//   //        max_tokens: 500,
-//   //        messages: [{
-//   //          role: 'user',
-//   //          content: [
-//   //            { type: 'image', source: { type: 'base64', media_type: imageType, data: base64Image } },
-//   //            { type: 'text', text: CLAUDE_PROMPT }
-//   //          ]
-//   //        }]
-//   //      })
-//
-//   // 6. PARSEO Y SANITIZACIÓN DE RESPUESTA
-//   //    - Parsear JSON de la respuesta de Claude
-//   //    - Validar que todos los campos existan y tengan tipos correctos:
-//   //      - store: string, max 100 chars, strip HTML
-//   //      - total: number, positivo, max 99999999
-//   //      - date: string, formato YYYY-MM-DD, no futuro
-//   //      - category: string, debe estar en CATEGORIES válidas
-//   //      - confidence: number, entre 0 y 1
-//   //    - Si el parseo falla, devolver 422 { error: 'No se pudo leer el ticket' }
-//
-//   // 7. POLÍTICA DE NO-ALMACENAMIENTO
-//   //    - NUNCA guardar la imagen en Storage ni en ningún bucket
-//   //    - NUNCA loguear el contenido de la imagen ni el base64
-//   //    - Solo guardar el resultado del escaneo (store, total, date, category)
-//   //    - La imagen existe solo en memoria durante el procesamiento
-//   //    - Al terminar el request, la imagen se libera automáticamente
-// })
-//
-// CLAUDE PROMPT para análisis de ticket:
-// "Analizá este ticket/factura. Extraé: 1. Nombre del comercio 2. Monto total 3. Fecha 4. Categoría sugerida. Respondé SOLO en JSON: { store, total, date, category, confidence }"
-//
-// Categorías válidas para el prompt:
-// Alimentación, Vivienda, Transporte, Servicios, Entretenimiento, Salud, Educación, Ropa, Ingresos, Otros
+// Ticket Scanner — OCR con Tesseract.js (client-side)
+// TODO SUPABASE: en producción, reemplazar OCR client-side con Edge Function + Claude Vision
+// para mayor precisión y seguridad (ver comentarios al final del archivo)
+import Tesseract from 'tesseract.js'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 const MAX_FILE_SIZE = 3 * 1024 * 1024 // 3MB
@@ -152,17 +76,205 @@ export function lookupBusiness(razonSocial) {
   return { found: false, category: null, displayName: null }
 }
 
+// Palabras clave de productos/servicios → categoría
+const PRODUCT_KEYWORDS = {
+  Transporte: [
+    'nafta', 'super', 'premium', 'diesel', 'gasoil', 'gnc', 'combustible',
+    'fuel', 'litros', 'lts', 'surtidor', 'estacion de servicio', 'peaje',
+    'subte', 'colectivo', 'tren', 'uber', 'cabify', 'estacionamiento',
+  ],
+  Alimentación: [
+    'leche', 'pan', 'carne', 'pollo', 'arroz', 'fideos', 'aceite',
+    'verdura', 'fruta', 'galletita', 'yogur', 'queso', 'harina',
+    'azucar', 'cerveza', 'vino', 'gaseosa', 'agua', 'comestible',
+    'almacen', 'supermercado', 'autoservicio', 'fiambre', 'lacteo',
+  ],
+  Salud: [
+    'farmacia', 'medicamento', 'remedio', 'comprimido', 'jarabe',
+    'ibuprofeno', 'paracetamol', 'vitamina', 'receta', 'drogueria',
+  ],
+  Entretenimiento: [
+    'restaurant', 'restaurante', 'bar', 'cafe', 'pizza', 'hamburguesa',
+    'delivery', 'cine', 'teatro', 'entrada', 'show', 'espectaculo',
+  ],
+  Ropa: [
+    'remera', 'pantalon', 'camisa', 'zapatilla', 'calzado', 'jean',
+    'campera', 'buzo', 'vestido', 'indumentaria', 'textil',
+  ],
+  Servicios: [
+    'luz', 'gas', 'agua', 'internet', 'telefono', 'celular', 'cable',
+    'electricidad', 'factura de servicio',
+  ],
+  Educación: [
+    'libro', 'cuaderno', 'lapiz', 'carpeta', 'libreria', 'curso',
+    'matricula', 'inscripcion', 'colegio', 'universidad',
+  ],
+}
+
 /**
- * Escanea un ticket/factura y extrae datos de gasto.
- * En producción, esto llama a una Edge Function que usa Claude Vision.
- * En desarrollo, devuelve datos mock después de un delay simulado.
+ * Detecta la categoría según las palabras clave encontradas en el texto del ticket.
+ * Analiza los productos/detalles del ticket, no solo la razón social.
+ */
+function detectCategoryFromText(text) {
+  const normalized = text.toLowerCase()
+  const scores = {}
+
+  for (const [category, keywords] of Object.entries(PRODUCT_KEYWORDS)) {
+    let count = 0
+    for (const kw of keywords) {
+      if (normalized.includes(kw)) count++
+    }
+    if (count > 0) scores[category] = count
+  }
+
+  if (Object.keys(scores).length === 0) return null
+
+  // Devolver la categoría con más coincidencias
+  return Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0]
+}
+
+/**
+ * Extrae el monto TOTAL del texto del ticket.
+ * Busca la línea que diga "TOTAL" y extrae el número asociado.
+ * Ignora subtotales, IVA, descuentos, etc.
+ */
+function extractTotal(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
+
+  // Buscar la línea con TOTAL (no subtotal, no total iva, etc.)
+  for (const line of lines) {
+    const upper = line.toUpperCase()
+    // Buscar líneas que contengan "TOTAL" pero NO "SUBTOTAL", "TOTAL IVA", "TOTAL NETO"
+    if (
+      upper.includes('TOTAL') &&
+      !upper.includes('SUBTOTAL') &&
+      !upper.includes('SUB TOTAL') &&
+      !upper.includes('SUB-TOTAL') &&
+      !upper.includes('TOTAL IVA') &&
+      !upper.includes('TOTAL NETO') &&
+      !upper.includes('TOTAL TRIBUTO')
+    ) {
+      // Extraer números de esta línea (formato argentino: 94.509,72 o 94509.72 o 94509,72)
+      const amount = parseArgentineAmount(line)
+      if (amount && amount > 0) return amount
+    }
+  }
+
+  // Fallback: buscar el número más grande del ticket (probablemente sea el total)
+  let maxAmount = 0
+  for (const line of lines) {
+    const amount = parseArgentineAmount(line)
+    if (amount && amount > maxAmount) maxAmount = amount
+  }
+
+  return maxAmount || null
+}
+
+/**
+ * Parsea un monto en formato argentino.
+ * Formatos posibles: $94.509,72 | 94.509,72 | 94509.72 | $94,509.72
+ */
+function parseArgentineAmount(text) {
+  // Limpiar signos de moneda y espacios
+  const cleaned = text.replace(/[^\d.,]/g, ' ').trim()
+
+  // Buscar patrones de números con formato
+  const patterns = [
+    // Formato argentino: 94.509,72 (puntos como miles, coma como decimal)
+    /(\d{1,3}(?:\.\d{3})*,\d{2})/,
+    // Formato: 94509,72
+    /(\d+,\d{2})/,
+    // Formato internacional: 94,509.72 o 94509.72
+    /(\d{1,3}(?:,\d{3})*\.\d{2})/,
+    /(\d+\.\d{2})/,
+    // Solo número entero grande
+    /(\d{3,})/,
+  ]
+
+  for (const pattern of patterns) {
+    const match = cleaned.match(pattern)
+    if (match) {
+      let numStr = match[1]
+      // Si tiene formato argentino (puntos como miles, coma decimal)
+      if (numStr.includes(',') && numStr.includes('.') && numStr.lastIndexOf(',') > numStr.lastIndexOf('.')) {
+        numStr = numStr.replace(/\./g, '').replace(',', '.')
+      } else if (numStr.includes(',') && !numStr.includes('.')) {
+        // Solo coma → es decimal
+        numStr = numStr.replace(',', '.')
+      } else if (numStr.includes(',') && numStr.includes('.') && numStr.lastIndexOf('.') > numStr.lastIndexOf(',')) {
+        // Formato internacional
+        numStr = numStr.replace(/,/g, '')
+      }
+      const num = parseFloat(numStr)
+      if (!isNaN(num) && num > 0) return num
+    }
+  }
+
+  return null
+}
+
+/**
+ * Extrae la razón social / nombre del comercio del texto del ticket.
+ * Generalmente está en las primeras líneas.
+ */
+function extractBusinessName(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2)
+
+  // Las primeras líneas suelen tener el nombre del comercio
+  // Filtrar líneas que son solo números, fechas, o datos técnicos
+  for (const line of lines.slice(0, 8)) {
+    const upper = line.toUpperCase()
+    // Ignorar líneas que son solo números, CUIT, fechas, direcciones cortas
+    if (/^\d+$/.test(line)) continue
+    if (/^CUIT/i.test(line)) continue
+    if (/^\d{2}[\/-]\d{2}[\/-]\d{2,4}/.test(line)) continue
+    if (/^(IVA|RESP|CONS|FINAL|TICKET|FACTURA|COMPROBANTE)/i.test(upper)) continue
+    if (line.length < 3) continue
+
+    // Esta línea parece ser el nombre del comercio
+    return line.slice(0, 100)
+  }
+
+  return null
+}
+
+/**
+ * Extrae la fecha del texto del ticket.
+ * Busca patrones de fecha comunes en tickets argentinos.
+ */
+function extractDate(text) {
+  // Patrones de fecha comunes en tickets argentinos
+  const patterns = [
+    // DD/MM/YYYY o DD-MM-YYYY
+    /(\d{2})[\/\-](\d{2})[\/\-](\d{4})/,
+    // DD/MM/YY
+    /(\d{2})[\/\-](\d{2})[\/\-](\d{2})/,
+  ]
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern)
+    if (match) {
+      let [, day, month, year] = match
+      if (year.length === 2) year = '20' + year
+      const d = parseInt(day), m = parseInt(month), y = parseInt(year)
+      if (d >= 1 && d <= 31 && m >= 1 && m <= 12 && y >= 2020 && y <= 2030) {
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+      }
+    }
+  }
+
+  return new Date().toISOString().split('T')[0]
+}
+
+/**
+ * Escanea un ticket/factura usando OCR (Tesseract.js) y extrae datos reales.
+ * Lee la imagen, extrae texto, y parsea: razón social, total, fecha, categoría.
  *
- * IMPORTANTE: Solo se extrae el campo TOTAL del ticket (no subtotal ni IVA).
- * Si no se puede leer el ticket, se devuelve un error honesto.
- * Si la razón social no se encuentra, se marca como no encontrada.
+ * TODO SUPABASE: en producción, reemplazar con Edge Function + Claude Vision
+ * para mayor precisión en tickets difíciles de leer.
  *
  * @param {File} imageFile - Archivo de imagen del ticket
- * @returns {Promise<{ razonSocial: string, store: string, total: number, date: string, category: string, confidence: number, businessFound: boolean }>}
+ * @returns {Promise<{ razonSocial: string, store: string, total: number, date: string, category: string, confidence: number, businessFound: boolean, ocrText: string }>}
  */
 export async function scanTicket(imageFile) {
   // Validar que sea un archivo
@@ -185,63 +297,62 @@ export async function scanTicket(imageFile) {
     )
   }
 
-  // TODO SUPABASE: reemplazar todo lo de abajo con:
-  // const formData = new FormData()
-  // formData.append('ticket', imageFile)
-  // const { data: { session } } = await supabase.auth.getSession()
-  // const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scan-ticket`, {
-  //   method: 'POST',
-  //   headers: { 'Authorization': `Bearer ${session.access_token}` },
-  //   body: formData,
-  // })
-  // if (!response.ok) {
-  //   const err = await response.json()
-  //   throw new Error(err.error || 'Error al escanear el ticket')
-  // }
-  // const data = response.json()
-  //
-  // // Buscar razón social en la base de comercios conocidos
-  // const lookup = lookupBusiness(data.razonSocial)
-  // return {
-  //   ...data,
-  //   businessFound: lookup.found,
-  //   category: lookup.found ? lookup.category : 'Otros',
-  //   store: lookup.found ? lookup.displayName : data.razonSocial,
-  // }
+  // OCR con Tesseract.js — leer el texto real de la imagen
+  let ocrText = ''
+  try {
+    const result = await Tesseract.recognize(imageFile, 'spa', {
+      logger: () => {}, // silenciar logs
+    })
+    ocrText = result.data.text || ''
+  } catch (err) {
+    throw new Error('No se pudo leer la imagen. Intentá con una foto más clara o con mejor iluminación.')
+  }
 
-  // Mock: simular delay de procesamiento (1500-2500ms)
-  const delay = 1500 + Math.random() * 1000
-  await new Promise((resolve) => setTimeout(resolve, delay))
+  if (!ocrText || ocrText.trim().length < 10) {
+    throw new Error('No se pudo extraer texto del ticket. Asegurate de que la imagen sea legible y esté bien iluminada.')
+  }
 
-  // TODO SUPABASE: en producción, Claude Vision extrae:
-  // 1. Razón social / nombre del establecimiento (campo superior del ticket)
-  // 2. TOTAL (solo la línea que dice TOTAL, no subtotal ni IVA)
-  // 3. Fecha del ticket
-  // Prompt de Claude: "Extraé SOLO: 1. Razón social o nombre del comercio 2. El monto de la línea TOTAL (no subtotal, no IVA, solo TOTAL) 3. Fecha. Si no podés leer algún campo, devolvé null para ese campo. NO inventes datos."
+  // Extraer datos del texto OCR
+  const razonSocial = extractBusinessName(ocrText)
+  const total = extractTotal(ocrText)
+  const date = extractDate(ocrText)
 
-  // Mock: simular diferentes escenarios realistas
-  const scenarios = [
-    // Comercio conocido - alta confianza
-    { razonSocial: 'COTO CICSA', total: 15430, confidence: 0.92 },
-    { razonSocial: 'JUMBO RETAIL ARG SA', total: 28750, confidence: 0.88 },
-    { razonSocial: 'FARMACITY SA', total: 8200, confidence: 0.90 },
-    { razonSocial: 'YPF SA', total: 22000, confidence: 0.95 },
-    // Comercio NO conocido - el usuario debe categorizar a mano
-    { razonSocial: 'PANADERIA DON JULIO SRL', total: 4500, confidence: 0.85 },
-    { razonSocial: 'FERRETERIA MARTINEZ', total: 12300, confidence: 0.78 },
-  ]
+  if (!total) {
+    throw new Error('No se pudo leer el monto total del ticket. Intentá con una foto más clara.')
+  }
 
-  const scenario = scenarios[Math.floor(Math.random() * scenarios.length)]
-  const lookup = lookupBusiness(scenario.razonSocial)
-  const today = new Date().toISOString().split('T')[0]
+  // Buscar en base de comercios conocidos
+  const lookup = lookupBusiness(razonSocial)
+
+  // Si no se encontró por razón social, intentar categorizar por productos/detalles
+  const categoryFromProducts = detectCategoryFromText(ocrText)
+
+  // Determinar categoría: primero por comercio conocido, luego por productos, luego Otros
+  const category = lookup.found ? lookup.category : (categoryFromProducts || 'Otros')
+
+  // Calcular confianza basada en cuántos datos pudimos extraer
+  let confidence = 0.5
+  if (total) confidence += 0.2
+  if (razonSocial) confidence += 0.1
+  if (lookup.found || categoryFromProducts) confidence += 0.1
+  if (date !== new Date().toISOString().split('T')[0]) confidence += 0.1 // fecha real leída
 
   return {
-    razonSocial: scenario.razonSocial,
-    store: lookup.found ? lookup.displayName : scenario.razonSocial,
-    total: scenario.total,
-    date: today,
-    category: lookup.found ? lookup.category : 'Otros',
-    confidence: scenario.confidence,
+    razonSocial: razonSocial || 'No identificado',
+    store: lookup.found ? lookup.displayName : (razonSocial || 'No identificado'),
+    total,
+    date,
+    category,
+    confidence: Math.min(confidence, 1),
     businessFound: lookup.found,
+    ocrText, // para debug/verificación
   }
 }
+
+// TODO SUPABASE: en producción, reemplazar OCR client-side con Edge Function:
+// - Mejor precisión con Claude Vision API
+// - Sin dependencia de Tesseract.js en el bundle del cliente
+// - Rate limiting server-side
+// - Validación de magic bytes del archivo
+// - Limpieza de EXIF metadata
+// - Política de no-almacenamiento de imágenes

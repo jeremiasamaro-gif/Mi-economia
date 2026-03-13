@@ -106,9 +106,17 @@ export default function TicketConfirmModal({ result, onConfirm, onCancel }) {
             </select>
           </div>
 
-          <div className="text-xs text-dark-muted bg-dark-bg rounded-lg px-3 py-2">
+          <div className="text-xs text-dark-muted bg-dark-bg rounded-lg px-3 py-2 space-y-1">
             <p>Razón social: <span className="font-mono text-dark-text">{result.razonSocial || result.store}</span></p>
-            <p className="mt-0.5">Total leído: <span className="font-mono text-accent">{formatARS(result.total)}</span></p>
+            <p>Total leído: <span className="font-mono text-accent">{formatARS(result.total)}</span></p>
+            {result.ocrText && (
+              <details className="mt-1">
+                <summary className="cursor-pointer text-dark-muted hover:text-dark-text">Ver texto leído del ticket</summary>
+                <pre className="mt-1 text-[10px] text-dark-muted font-mono whitespace-pre-wrap max-h-32 overflow-y-auto bg-dark-surface rounded p-2">
+                  {result.ocrText}
+                </pre>
+              </details>
+            )}
           </div>
         </div>
 
