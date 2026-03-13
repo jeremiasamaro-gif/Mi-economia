@@ -1,18 +1,21 @@
 import { NavLink } from 'react-router-dom'
 import { LayoutDashboard, Receipt, PiggyBank, RefreshCw, CreditCard, Settings, Shield, LogOut } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
+import useAdminStore from '../../store/adminStore'
 import PlanBadge from './PlanBadge'
 
 const navItems = [
-  { to: '/app', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/app/expenses', icon: Receipt, label: 'Gastos' },
-  { to: '/app/budgets', icon: PiggyBank, label: 'Presupuestos', pro: true },
-  { to: '/app/recurring', icon: RefreshCw, label: 'Recurrentes', pro: true },
+  { to: '/app', icon: LayoutDashboard, label: 'Dashboard', featureKey: 'dashboard' },
+  { to: '/app/expenses', icon: Receipt, label: 'Gastos', featureKey: 'expenses' },
+  { to: '/app/budgets', icon: PiggyBank, label: 'Presupuestos', pro: true, featureKey: 'budgets' },
+  { to: '/app/recurring', icon: RefreshCw, label: 'Recurrentes', pro: true, featureKey: 'recurring' },
   { to: '/pricing', icon: CreditCard, label: 'Planes' },
 ]
 
 export default function Sidebar() {
-  const { user, logout, isAdmin, isPro } = useAuth()
+  const { user, logout, isAdmin, isPro, isTrial, trialDaysLeft } = useAuth()
+  const getUserFeatures = useAdminStore((s) => s.getUserFeatures)
+  const userFeatures = user ? getUserFeatures(user.id, user.plan) : {}
 
   return (
     <aside className="w-[220px] h-screen bg-dark-surface border-r border-dark-border flex flex-col fixed left-0 top-0 z-30">
@@ -25,26 +28,33 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {navItems.map(({ to, icon: Icon, label, pro }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === '/app'}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                isActive
-                  ? 'bg-accent/10 text-accent'
-                  : 'text-dark-muted hover:text-dark-text hover:bg-dark-hover'
-              } ${pro && !isPro ? 'opacity-50' : ''}`
-            }
-          >
-            <Icon size={18} />
-            <span>{label}</span>
-            {pro && !isPro && (
-              <span className="ml-auto text-[10px] bg-accent/20 text-accent px-1.5 py-0.5 rounded">PRO</span>
-            )}
-          </NavLink>
-        ))}
+        {navItems.map(({ to, icon: Icon, label, pro, featureKey }) => {
+          // Admin overrides: if feature is explicitly disabled, hide item
+          if (featureKey && userFeatures[featureKey] === false) return null
+          // If feature is enabled by admin override, show even if normally pro-gated
+          const enabledByOverride = featureKey && userFeatures[featureKey] === true
+          const isLocked = pro && !isPro && !enabledByOverride
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/app'}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                  isActive
+                    ? 'bg-accent/10 text-accent'
+                    : 'text-dark-muted hover:text-dark-text hover:bg-dark-hover'
+                } ${isLocked ? 'opacity-50' : ''}`
+              }
+            >
+              <Icon size={18} />
+              <span>{label}</span>
+              {isLocked && (
+                <span className="ml-auto text-[10px] bg-accent/20 text-accent px-1.5 py-0.5 rounded">PRO</span>
+              )}
+            </NavLink>
+          )
+        })}
 
         {isAdmin && (
           <>
@@ -74,7 +84,13 @@ export default function Sidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm truncate">{user?.full_name}</p>
-            <PlanBadge plan={user?.plan} />
+            {isTrial ? (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 font-medium">
+                Trial · {trialDaysLeft}d
+              </span>
+            ) : (
+              <PlanBadge plan={user?.plan} />
+            )}
           </div>
         </div>
         <button

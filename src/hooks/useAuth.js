@@ -10,6 +10,8 @@ export function useAuth() {
   const clearError = useAuthStore((s) => s.clearError)
   const isAdmin = useAuthStore((s) => s.isAdmin)
   const isPro = useAuthStore((s) => s.isPro)
+  const isTrial = useAuthStore((s) => s.isTrial)
+  const trialDaysLeft = useAuthStore((s) => s.trialDaysLeft)
 
-  return { user, loading, error, login, register, logout, clearError, isAdmin: isAdmin(), isPro: isPro() }
+  return { user, loading, error, login, register, logout, clearError, isAdmin: isAdmin(), isPro: isPro(), isTrial: isTrial(), trialDaysLeft: trialDaysLeft() }
 }

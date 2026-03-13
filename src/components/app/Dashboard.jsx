@@ -30,13 +30,36 @@ export default function Dashboard() {
   const totalIncome = thisMonthAll.filter((e) => e.type === 'income').reduce((s, e) => s + e.amount, 0)
   const totalExpense = thisMonthAll.filter((e) => e.type === 'expense').reduce((s, e) => s + e.amount, 0)
   const balance = totalIncome - totalExpense
-  const savings = balance > 0 ? balance : 0
+
+  // Smart savings projection: estimate remaining expenses based on daily average
+  const dayOfMonth = now.getDate()
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+  const daysRemaining = daysInMonth - dayOfMonth
+
+  // Use current month's daily average + historical trend from previous months
+  const prevMonthExpenses = expenses.filter((e) => {
+    const d = new Date(e.date)
+    const prevMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1
+    const prevYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+    return d.getMonth() === prevMonth && d.getFullYear() === prevYear && e.type === 'expense'
+  })
+  const prevMonthTotal = prevMonthExpenses.reduce((s, e) => s + e.amount, 0)
+
+  // Weighted projection: 60% current pace + 40% last month pattern
+  const currentDailyAvg = dayOfMonth > 0 ? totalExpense / dayOfMonth : 0
+  const prevDailyAvg = prevMonthTotal > 0 ? prevMonthTotal / daysInMonth : 0
+  const projectedDailyAvg = prevDailyAvg > 0
+    ? currentDailyAvg * 0.6 + prevDailyAvg * 0.4
+    : currentDailyAvg
+  const projectedRemainingExpenses = projectedDailyAvg * daysRemaining
+  const projectedTotalExpenses = totalExpense + projectedRemainingExpenses
+  const savings = Math.max(0, totalIncome - projectedTotalExpenses)
 
   const cards = [
     { label: 'Ingresos del mes', value: totalIncome, icon: TrendingUp, color: 'text-accent' },
     { label: 'Gastos del mes', value: totalExpense, icon: TrendingDown, color: 'text-red-400' },
     { label: 'Balance', value: balance, icon: DollarSign, color: balance >= 0 ? 'text-accent' : 'text-red-400' },
-    { label: 'Ahorro potencial', value: savings, icon: PiggyBank, color: 'text-blue-400' },
+    { label: 'Ahorro potencial', value: savings, icon: PiggyBank, color: 'text-blue-400', subtitle: daysRemaining > 0 ? `Faltan ~${formatARS(projectedRemainingExpenses)} en ${daysRemaining} días` : null },
   ]
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -59,13 +82,14 @@ export default function Dashboard() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {cards.map(({ label, value, icon: Icon, color }) => (
+        {cards.map(({ label, value, icon: Icon, color, subtitle }) => (
           <div key={label} className="bg-dark-surface border border-dark-border rounded-xl p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-dark-muted">{label}</span>
               <Icon size={18} className={color} />
             </div>
             <p className={`text-2xl font-bold font-mono ${color}`}>{formatARS(value)}</p>
+            {subtitle && <p className="text-[11px] text-dark-muted mt-1">{subtitle}</p>}
           </div>
         ))}
       </div>

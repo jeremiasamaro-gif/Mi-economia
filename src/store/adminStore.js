@@ -4,9 +4,22 @@ import { registeredUsers } from './authStore'
 
 // TODO SUPABASE: replace all with Supabase admin queries (need service_role key on backend)
 
+// Per-user feature overrides: { [userId]: { dashboard: true, expenses: true, budgets: false, ... } }
+// null = use plan defaults, true/false = admin override
+const SIDEBAR_FEATURES = ['dashboard', 'expenses', 'budgets', 'recurring', 'ai_chat']
+
+const getDefaultFeatures = (plan) => ({
+  dashboard: true,       // all plans
+  expenses: true,        // all plans
+  budgets: plan === 'pro',
+  recurring: plan === 'pro',
+  ai_chat: plan === 'pro',
+})
+
 const useAdminStore = create((set, get) => ({
   featureFlags: [...mockFeatureFlags],
   payments: [...mockPayments],
+  userFeatureOverrides: {},  // { userId: { feature: boolean } }
 
   // Users — combines demo users + real registered users
   // Only registered users count in stats (demo users are excluded)
@@ -35,6 +48,37 @@ const useAdminStore = create((set, get) => ({
     }
     set((s) => ({ ...s }))
   },
+
+  // Per-user feature toggles
+  getUserFeatures: (userId, plan) => {
+    const defaults = getDefaultFeatures(plan || 'free')
+    const overrides = get().userFeatureOverrides[userId]
+    if (!overrides) return defaults
+    return { ...defaults, ...overrides }
+  },
+
+  toggleUserFeature: (userId, feature) => {
+    set((state) => {
+      const current = state.userFeatureOverrides[userId] || {}
+      return {
+        userFeatureOverrides: {
+          ...state.userFeatureOverrides,
+          [userId]: { ...current, [feature]: !current[feature] ? true : !current[feature] },
+        },
+      }
+    })
+  },
+
+  setUserFeature: (userId, feature, enabled) => {
+    set((state) => ({
+      userFeatureOverrides: {
+        ...state.userFeatureOverrides,
+        [userId]: { ...(state.userFeatureOverrides[userId] || {}), [feature]: enabled },
+      },
+    }))
+  },
+
+  getSidebarFeatures: () => SIDEBAR_FEATURES,
 
   // Feature flags
   toggleFeatureFlag: (key) => {

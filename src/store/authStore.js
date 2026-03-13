@@ -37,6 +37,14 @@ const useAuthStore = create((set, get) => ({
         set({ error: 'Contraseña incorrecta', loading: false })
         return false
       }
+      // Check if trial has expired
+      if (registered.subscription_status === 'trial' && registered.trial_ends_at) {
+        if (new Date() > new Date(registered.trial_ends_at)) {
+          registered.plan = 'free'
+          registered.subscription_status = 'inactive'
+          registered.trial_ends_at = null
+        }
+      }
       set({ user: registered, loading: false })
       return true
     }
@@ -57,15 +65,20 @@ const useAuthStore = create((set, get) => ({
       return false
     }
 
+    // New users get 10-day Pro trial
+    const trialEnd = new Date()
+    trialEnd.setDate(trialEnd.getDate() + 10)
+
     const newUser = {
       id: `user-${Date.now()}`,
       email,
       full_name: fullName,
       password,
-      plan: 'free',
+      plan: 'pro',
       role: 'user',
       mp_payment_id: null,
-      subscription_status: 'inactive',
+      subscription_status: 'trial',
+      trial_ends_at: trialEnd.toISOString(),
       created_at: new Date().toISOString(),
     }
     registeredUsers.push(newUser)
@@ -82,6 +95,15 @@ const useAuthStore = create((set, get) => ({
 
   isAdmin: () => get().user?.role === 'admin',
   isPro: () => get().user?.plan === 'pro',
+
+  // Trial helpers
+  isTrial: () => get().user?.subscription_status === 'trial',
+  trialDaysLeft: () => {
+    const user = get().user
+    if (user?.subscription_status !== 'trial' || !user?.trial_ends_at) return 0
+    const diff = new Date(user.trial_ends_at) - new Date()
+    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
+  },
 }))
 
 export default useAuthStore
