@@ -233,109 +233,38 @@ function preprocessImage(imageFile) {
 }
 
 /**
- * Extrae TODOS los montos posibles del texto completo del ticket.
- * Busca montos en formato argentino en todo el texto.
+ * Limpia artefactos de OCR de un texto numérico.
+ * El OCR suele meter espacios, letras sueltas, o caracteres raros entre dígitos.
+ * Ej: "94. 509, 72" → "94.509,72", "$ 94 509,72" → "94509,72"
  */
-function extractAllAmounts(text) {
-  const amounts = []
-  // Buscar todos los patrones de montos en el texto completo
-  const patterns = [
-    // $94.509,72 o 94.509,72 (formato argentino con punto de miles y coma decimal)
-    /\$?\s*(\d{1,3}(?:\.\d{3})+,\d{2})/g,
-    // $94509,72 o 94509,72 (sin punto de miles, coma decimal)
-    /\$?\s*(\d{4,},\d{2})/g,
-    // $94509.72 (formato con punto decimal)
-    /\$?\s*(\d{4,}\.\d{2})/g,
-  ]
-
-  for (const pattern of patterns) {
-    let match
-    while ((match = pattern.exec(text)) !== null) {
-      const parsed = parseArgentineAmount(match[1])
-      if (parsed && parsed > 0) {
-        amounts.push(parsed)
-      }
-    }
-  }
-
-  return [...new Set(amounts)].sort((a, b) => b - a) // ordenar de mayor a menor
-}
-
-/**
- * Extrae el monto TOTAL del texto del ticket.
- * Estrategia múltiple: busca línea TOTAL, luego el monto más grande.
- */
-function extractTotal(text) {
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
-
-  // Estrategia 1: Buscar línea con "TOTAL" explícito
-  for (const line of lines) {
-    const upper = line.toUpperCase()
-    if (
-      upper.includes('TOTAL') &&
-      !upper.includes('SUBTOTAL') &&
-      !upper.includes('SUB TOTAL') &&
-      !upper.includes('SUB-TOTAL') &&
-      !upper.includes('TOTAL IVA') &&
-      !upper.includes('TOTAL NETO') &&
-      !upper.includes('TOTAL TRIBUTO') &&
-      !upper.includes('TOTAL DESCUENTO')
-    ) {
-      const amount = parseArgentineAmount(line)
-      if (amount && amount > 0) return amount
-    }
-  }
-
-  // Estrategia 2: Buscar variantes de "TOTAL" que el OCR puede malinterpretar
-  // OCR a veces lee "TOTAL" como "T0TAL", "TOTAI", "TÓTAL", etc.
-  for (const line of lines) {
-    const upper = line.toUpperCase()
-    if (
-      (upper.match(/T.?[O0]T.?[AL]/i) || upper.includes('IMPORTE') || upper.includes('A PAGAR')) &&
-      !upper.includes('SUB')
-    ) {
-      const amount = parseArgentineAmount(line)
-      if (amount && amount > 0) return amount
-    }
-  }
-
-  // Estrategia 3: Buscar la línea que viene después de una línea que dice TOTAL
-  for (let i = 0; i < lines.length; i++) {
-    const upper = lines[i].toUpperCase()
-    if (upper.includes('TOTAL') && !upper.includes('SUB')) {
-      // El monto puede estar en la misma línea o en la siguiente
-      const amountThisLine = parseArgentineAmount(lines[i])
-      if (amountThisLine && amountThisLine > 0) return amountThisLine
-      if (i + 1 < lines.length) {
-        const amountNextLine = parseArgentineAmount(lines[i + 1])
-        if (amountNextLine && amountNextLine > 0) return amountNextLine
-      }
-    }
-  }
-
-  // Estrategia 4: Extraer todos los montos y devolver el más grande
-  const allAmounts = extractAllAmounts(text)
-  if (allAmounts.length > 0) return allAmounts[0]
-
-  return null
+function cleanOCRNumber(text) {
+  // Paso 1: Sacar todo lo que no sea dígito, punto, coma o espacio
+  let cleaned = text.replace(/[^\d.,\s]/g, '').trim()
+  // Paso 2: Sacar espacios alrededor de puntos y comas (OCR artifact)
+  cleaned = cleaned.replace(/\s*([.,])\s*/g, '$1')
+  // Paso 3: Si quedan espacios entre dígitos, puede ser separador de miles
+  // "94 509" → "94509"
+  cleaned = cleaned.replace(/(\d)\s+(\d)/g, '$1$2')
+  return cleaned
 }
 
 /**
  * Parsea un monto en formato argentino.
+ * Primero limpia artefactos de OCR, luego intenta parsear.
  * Formatos: $94.509,72 | 94.509,72 | 94509,72 | 94509.72
  */
 function parseArgentineAmount(text) {
-  // Limpiar todo excepto dígitos, puntos y comas
-  const cleaned = text.replace(/[^\d.,]/g, ' ').trim()
+  const cleaned = cleanOCRNumber(text)
+  if (!cleaned) return null
 
   const patterns = [
     // Formato argentino: 94.509,72 (puntos miles, coma decimal)
-    /(\d{1,3}(?:\.\d{3})+,\d{2})/,
+    /(\d{1,3}(?:\.\d{3})+,\d{1,2})/,
     // Formato: 94509,72 (sin separador de miles, coma decimal)
-    /(\d+,\d{2})/,
+    /(\d+,\d{1,2})/,
     // Formato internacional: 94,509.72 o 94509.72
-    /(\d{1,3}(?:,\d{3})+\.\d{2})/,
-    /(\d+\.\d{2})/,
+    /(\d{1,3}(?:,\d{3})+\.\d{1,2})/,
+    /(\d+\.\d{1,2})/,
     // Número entero grande (puede ser un total sin decimales)
     /(\d{4,})/,
   ]
@@ -344,7 +273,6 @@ function parseArgentineAmount(text) {
     const match = cleaned.match(pattern)
     if (match) {
       let numStr = match[1]
-      // Formato argentino (puntos como miles, coma decimal)
       if (numStr.includes(',') && numStr.includes('.') && numStr.lastIndexOf(',') > numStr.lastIndexOf('.')) {
         numStr = numStr.replace(/\./g, '').replace(',', '.')
       } else if (numStr.includes(',') && !numStr.includes('.')) {
@@ -358,6 +286,80 @@ function parseArgentineAmount(text) {
   }
 
   return null
+}
+
+/**
+ * Verifica si una línea contiene la palabra TOTAL (no subtotal, no total iva, etc.)
+ */
+function isTotalLine(line) {
+  const upper = line.toUpperCase()
+  if (!upper.includes('TOTAL') &&
+      !upper.match(/T.?[O0]T.?[AIL]{1,2}/i) &&
+      !upper.includes('IMPORTE') &&
+      !upper.includes('A PAGAR')) {
+    return false
+  }
+  // Excluir subtotales y similares
+  if (upper.includes('SUBTOTAL') || upper.includes('SUB TOTAL') ||
+      upper.includes('SUB-TOTAL') || upper.includes('TOTAL IVA') ||
+      upper.includes('TOTAL NETO') || upper.includes('TOTAL TRIBUTO') ||
+      upper.includes('TOTAL DESCUENTO') || upper.includes('TOTAL GRAVADO')) {
+    return false
+  }
+  return true
+}
+
+/**
+ * Extrae el monto TOTAL del texto del ticket.
+ * Busca la línea que dice TOTAL y lee el importe al lado.
+ * Múltiples estrategias para tolerar errores de OCR.
+ */
+function extractTotal(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
+
+  // Estrategia 1: Buscar línea con TOTAL y extraer el monto de esa línea
+  for (const line of lines) {
+    if (isTotalLine(line)) {
+      const amount = parseArgentineAmount(line)
+      if (amount && amount > 0) return amount
+    }
+  }
+
+  // Estrategia 2: TOTAL puede estar en una línea y el monto en la siguiente
+  for (let i = 0; i < lines.length; i++) {
+    if (isTotalLine(lines[i])) {
+      // Si no hay monto en esta línea, buscar en la siguiente
+      const amountThis = parseArgentineAmount(lines[i])
+      if (amountThis && amountThis > 0) return amountThis
+      if (i + 1 < lines.length) {
+        const amountNext = parseArgentineAmount(lines[i + 1])
+        if (amountNext && amountNext > 0) return amountNext
+      }
+      // Buscar 2 líneas más abajo también
+      if (i + 2 < lines.length) {
+        const amount2 = parseArgentineAmount(lines[i + 2])
+        if (amount2 && amount2 > 0) return amount2
+      }
+    }
+  }
+
+  // Estrategia 3: Juntar líneas que el OCR separó mal
+  // A veces "TOTAL         $94.509,72" se lee como 2 líneas
+  const fullText = lines.join(' ')
+  const totalMatch = fullText.match(/TOTAL[\s:$]*([0-9\s.,]+)/i)
+  if (totalMatch) {
+    const amount = parseArgentineAmount(totalMatch[1])
+    if (amount && amount > 0) return amount
+  }
+
+  // Estrategia 4: Buscar el monto más grande del ticket (fallback)
+  let maxAmount = 0
+  for (const line of lines) {
+    const amount = parseArgentineAmount(line)
+    if (amount && amount > maxAmount) maxAmount = amount
+  }
+
+  return maxAmount || null
 }
 
 /**
