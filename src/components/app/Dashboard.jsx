@@ -3,7 +3,9 @@ import { TrendingUp, TrendingDown, DollarSign, PiggyBank, Lock } from 'lucide-re
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { useExpenses } from '../../hooks/useExpenses'
 import { usePlan } from '../../hooks/usePlan'
+import { useGroup } from '../../hooks/useGroup'
 import UpgradeModal from '../shared/UpgradeModal'
+import GroupDashboard from './GroupDashboard'
 
 const COLORS = ['#4ade80', '#f97316', '#3b82f6', '#a855f7', '#ef4444', '#eab308', '#06b6d4', '#ec4899', '#84cc16', '#6366f1']
 
@@ -19,6 +21,7 @@ const formatShort = (n) => {
 export default function Dashboard() {
   const { expenses, currentMonthExpenses, monthlyTotals, categoryTotals } = useExpenses()
   const { canUseCharts } = usePlan()
+  const { group } = useGroup()
   const [showUpgrade, setShowUpgrade] = useState(false)
 
   const now = new Date()
@@ -174,6 +177,13 @@ export default function Dashboard() {
           >
             Mejorar a Pro
           </button>
+        </div>
+      )}
+
+      {/* Group breakdown */}
+      {group && canUseCharts && (
+        <div className="mt-6">
+          <GroupDashboard />
         </div>
       )}
 

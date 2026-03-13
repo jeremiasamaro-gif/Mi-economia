@@ -21,6 +21,10 @@ export function usePlan() {
     canUseTags: limits.hasTags,
     canUseSplitting: limits.hasSplitting,
     canUseCsvExport: limits.hasCsvExport,
+    canUseAchievements: limits.hasAchievements || features.achievements === true,
+    canUseGroups: limits.hasGroups || features.groups === true,
+    canUseScanner: limits.hasScanner || features.scanner === true,
+    canUseWhatsApp: limits.hasWhatsApp || features.whatsapp === true,
     maxExpenses: limits.maxExpensesPerMonth,
   }
 }

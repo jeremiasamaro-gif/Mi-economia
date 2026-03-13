@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Search, ArrowUpCircle, ArrowDownCircle, Ban, ChevronDown, ChevronRight, LayoutDashboard, Receipt, PiggyBank, RefreshCw, MessageCircle } from 'lucide-react'
+import { Search, ArrowUpCircle, ArrowDownCircle, Ban, ChevronDown, ChevronRight, LayoutDashboard, Receipt, PiggyBank, RefreshCw, MessageCircle, Trophy, UsersRound, Smartphone, ScanLine } from 'lucide-react'
 import useAdminStore from '../../store/adminStore'
 import useExpenseStore from '../../store/expenseStore'
 import PlanBadge from '../shared/PlanBadge'
@@ -10,6 +10,10 @@ const FEATURE_LABELS = {
   budgets: { label: 'Presupuestos', icon: PiggyBank },
   recurring: { label: 'Recurrentes', icon: RefreshCw },
   ai_chat: { label: 'Asistente IA', icon: MessageCircle },
+  achievements: { label: 'Logros', icon: Trophy },
+  groups: { label: 'Grupo', icon: UsersRound },
+  whatsapp: { label: 'WhatsApp', icon: Smartphone },
+  scanner: { label: 'Scanner', icon: ScanLine },
 }
 
 export default function UsersTable() {

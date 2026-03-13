@@ -4,11 +4,14 @@ import Dashboard from '../components/app/Dashboard'
 import ExpenseTable from '../components/app/ExpenseTable'
 import BudgetManager from '../components/app/BudgetManager'
 import RecurringExpenses from '../components/app/RecurringExpenses'
+import Achievements from '../components/app/Achievements'
+import GroupSettings from '../components/app/GroupSettings'
+import WhatsAppSettings from '../components/app/WhatsAppSettings'
 import AIChat from '../components/app/AIChat'
 import { usePlan } from '../hooks/usePlan'
 
 export default function AppPage() {
-  const { canUseBudgets, canUseRecurring } = usePlan()
+  const { canUseBudgets, canUseRecurring, canUseAchievements, canUseGroups, canUseWhatsApp } = usePlan()
 
   return (
     <div className="flex min-h-screen bg-dark-bg">
@@ -24,6 +27,18 @@ export default function AppPage() {
           <Route
             path="recurring"
             element={canUseRecurring ? <RecurringExpenses /> : <Navigate to="/pricing" replace />}
+          />
+          <Route
+            path="achievements"
+            element={canUseAchievements ? <Achievements /> : <Navigate to="/pricing" replace />}
+          />
+          <Route
+            path="group"
+            element={canUseGroups ? <GroupSettings /> : <Navigate to="/pricing" replace />}
+          />
+          <Route
+            path="whatsapp"
+            element={canUseWhatsApp ? <WhatsAppSettings /> : <Navigate to="/pricing" replace />}
           />
         </Routes>
       </main>

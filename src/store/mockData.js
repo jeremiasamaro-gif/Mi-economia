@@ -136,6 +136,47 @@ export const CATEGORIES = [
 ]
 
 export const PLAN_LIMITS = {
-  free: { maxExpensesPerMonth: 50, hasAI: false, hasRecurring: false, hasCharts: false, hasBudgets: false, hasTags: false, hasSplitting: false, hasCsvExport: false },
-  pro: { maxExpensesPerMonth: Infinity, hasAI: true, hasRecurring: true, hasCharts: true, hasBudgets: true, hasTags: true, hasSplitting: true, hasCsvExport: true },
+  free: { maxExpensesPerMonth: 50, hasAI: false, hasRecurring: false, hasCharts: false, hasBudgets: false, hasTags: false, hasSplitting: false, hasCsvExport: false, hasAchievements: false, hasGroups: false, hasScanner: false, hasWhatsApp: false },
+  pro: { maxExpensesPerMonth: Infinity, hasAI: true, hasRecurring: true, hasCharts: true, hasBudgets: true, hasTags: true, hasSplitting: true, hasCsvExport: true, hasAchievements: true, hasGroups: true, hasScanner: true, hasWhatsApp: true },
 }
+
+// Achievement definitions
+export const ACHIEVEMENT_DEFINITIONS = [
+  // Streaks
+  { id: 'streak-no-delivery-7', type: 'streak', title: 'Semana sin delivery', description: '7 días sin pedir delivery', icon: '🍳', threshold: 7 },
+  { id: 'streak-under-budget', type: 'streak', title: 'Mes bajo presupuesto', description: 'Un mes completo sin pasarte del presupuesto', icon: '🎯', threshold: 1 },
+  { id: 'streak-savings-3m', type: 'streak', title: '3 meses ahorrando', description: '3 meses consecutivos con balance positivo', icon: '🔥', threshold: 3 },
+  { id: 'streak-logging-7', type: 'streak', title: 'Racha de registro', description: '7 días seguidos registrando al menos un gasto', icon: '📝', threshold: 7 },
+  // Savings milestones
+  { id: 'milestone-first', type: 'milestone', title: 'Primer ahorro', description: 'Tu primer mes con balance positivo', icon: '🌱', threshold: 1 },
+  { id: 'milestone-10k', type: 'milestone', title: 'Primer escalón', description: 'Ahorraste $10.000 acumulados', icon: '💰', threshold: 10000 },
+  { id: 'milestone-50k', type: 'milestone', title: 'Ahorrador serio', description: 'Ahorraste $50.000 acumulados', icon: '🏅', threshold: 50000 },
+  { id: 'milestone-100k', type: 'milestone', title: 'Club de los 100k', description: 'Ahorraste $100.000 acumulados', icon: '🏆', threshold: 100000 },
+  { id: 'milestone-500k', type: 'milestone', title: 'Medio palo', description: 'Ahorraste $500.000 acumulados', icon: '💎', threshold: 500000 },
+  { id: 'milestone-1m', type: 'milestone', title: 'Millonario', description: 'Ahorraste $1.000.000 acumulados', icon: '👑', threshold: 1000000 },
+]
+
+// TODO SUPABASE: replace with query to achievements table
+export const mockAchievements = [
+  { id: 'ua1', user_id: 'user-demo-pro', achievement_id: 'milestone-first', unlocked_at: '2026-01-31T20:00:00Z', progress: 100 },
+  { id: 'ua2', user_id: 'user-demo-pro', achievement_id: 'milestone-10k', unlocked_at: '2026-02-15T14:00:00Z', progress: 100 },
+  { id: 'ua3', user_id: 'user-demo-pro', achievement_id: 'streak-logging-7', unlocked_at: '2026-02-10T18:00:00Z', progress: 100 },
+]
+
+// TODO SUPABASE: replace with query to groups/group_members tables
+export const mockGroups = [
+  {
+    id: 'grp-1',
+    name: 'Casa con Sofi',
+    owner_id: 'user-demo-pro',
+    members: [
+      { user_id: 'user-demo-pro', name: 'Usuario Demo Pro', email: 'demo-pro@mieconomia.com', role: 'owner', joined_at: '2026-01-15T10:00:00Z' },
+      { user_id: 'user-member-1', name: 'Sofía', email: 'sofia@ejemplo.com', role: 'member', joined_at: '2026-01-16T10:00:00Z' },
+    ],
+    created_at: '2026-01-15T10:00:00Z',
+  },
+]
+
+export const mockGroupInvites = [
+  { id: 'inv-1', group_id: 'grp-1', email: 'carlos@ejemplo.com', token: 'mock-token-abc123', expires_at: '2026-04-01T10:00:00Z', used: false, created_at: '2026-03-12T10:00:00Z' },
+]

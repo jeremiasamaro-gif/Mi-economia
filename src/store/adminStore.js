@@ -6,7 +6,7 @@ import { registeredUsers } from './authStore'
 
 // Per-user feature overrides: { [userId]: { dashboard: true, expenses: true, budgets: false, ... } }
 // null = use plan defaults, true/false = admin override
-const SIDEBAR_FEATURES = ['dashboard', 'expenses', 'budgets', 'recurring', 'ai_chat']
+const SIDEBAR_FEATURES = ['dashboard', 'expenses', 'budgets', 'recurring', 'ai_chat', 'achievements', 'groups', 'whatsapp', 'scanner']
 
 const getDefaultFeatures = (plan) => ({
   dashboard: true,       // all plans
@@ -14,6 +14,10 @@ const getDefaultFeatures = (plan) => ({
   budgets: plan === 'pro',
   recurring: plan === 'pro',
   ai_chat: plan === 'pro',
+  achievements: plan === 'pro',
+  groups: plan === 'pro',
+  whatsapp: plan === 'pro',
+  scanner: plan === 'pro',
 })
 
 const useAdminStore = create((set, get) => ({

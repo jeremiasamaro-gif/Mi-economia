@@ -33,6 +33,10 @@ export default function UpgradeModal({ isOpen, onClose, feature }) {
             'Presupuestos por categoría',
             'Gastos recurrentes automáticos',
             'Exportar/importar CSV',
+            'Sistema de logros y compartir',
+            'Cuentas grupales (pareja/familia)',
+            'Escáner de tickets con IA',
+            'Bot de WhatsApp',
           ].map((item) => (
             <li key={item} className="flex items-center gap-2 text-dark-text">
               <span className="text-accent">✓</span> {item}

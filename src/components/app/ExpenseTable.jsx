@@ -1,17 +1,19 @@
 import { useState } from 'react'
-import { Plus, Trash2, Edit3, Check, X, Tag, Users } from 'lucide-react'
+import { Plus, Trash2, Edit3, Check, X, Tag, Users, ScanLine } from 'lucide-react'
 import { useExpenses } from '../../hooks/useExpenses'
 import { usePlan } from '../../hooks/usePlan'
 import { CATEGORIES } from '../../store/mockData'
 import UpgradeModal from '../shared/UpgradeModal'
+import TicketScanner from './TicketScanner'
 
 const formatARS = (n) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 
 export default function ExpenseTable() {
   const { expenses, currentMonthCount, canAdd, addExpense, updateExpense, deleteExpense } = useExpenses()
-  const { maxExpenses, isPro, canUseTags, canUseSplitting } = usePlan()
+  const { maxExpenses, isPro, canUseTags, canUseSplitting, canUseScanner } = usePlan()
   const [showUpgrade, setShowUpgrade] = useState(false)
+  const [showScanner, setShowScanner] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [editData, setEditData] = useState({})
   const [showAdd, setShowAdd] = useState(false)
@@ -79,12 +81,21 @@ export default function ExpenseTable() {
             </p>
           )}
         </div>
-        <button
-          onClick={() => (canAdd ? setShowAdd(!showAdd) : setShowUpgrade(true))}
-          className="flex items-center gap-2 bg-accent text-dark-bg px-4 py-2 rounded-lg text-sm font-semibold hover:bg-accent/90"
-        >
-          <Plus size={16} /> Agregar
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => canUseScanner ? setShowScanner(true) : setShowUpgrade(true)}
+            className="flex items-center gap-2 border border-accent text-accent px-3 py-2 rounded-lg text-sm font-semibold hover:bg-accent/10"
+            title="Escanear ticket"
+          >
+            <ScanLine size={16} />
+          </button>
+          <button
+            onClick={() => (canAdd ? setShowAdd(!showAdd) : setShowUpgrade(true))}
+            className="flex items-center gap-2 bg-accent text-dark-bg px-4 py-2 rounded-lg text-sm font-semibold hover:bg-accent/90"
+          >
+            <Plus size={16} /> Agregar
+          </button>
+        </div>
       </div>
 
       {/* Progress bar for free plan */}
@@ -340,6 +351,11 @@ export default function ExpenseTable() {
       </div>
 
       <UpgradeModal isOpen={showUpgrade} onClose={() => setShowUpgrade(false)} feature="Gastos ilimitados" />
+      <TicketScanner
+        isOpen={showScanner}
+        onClose={() => setShowScanner(false)}
+        onExpenseAdded={(expense) => addExpense(expense)}
+      />
     </div>
   )
 }
