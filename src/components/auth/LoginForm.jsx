@@ -90,13 +90,13 @@ export default function LoginForm({ onLogin, error, loading }) {
 
           {/* Demo hint */}
           <div className="border-t border-dark-border pt-3 mt-3">
-            <p className="text-xs text-dark-muted text-center mb-2">Demo: usá estas credenciales</p>
+            <p className="text-xs text-dark-muted text-center mb-2">Probá la plataforma con estas cuentas demo</p>
             <div className="text-xs font-mono bg-dark-bg rounded p-2 space-y-1">
-              <p>Admin: maria@ejemplo.com</p>
-              <p>User Pro: juan@ejemplo.com</p>
-              <p>User Free: ana@ejemplo.com</p>
+              <p><span className="text-accent">Pro:</span> demo-pro@mieconomia.com</p>
+              <p><span className="text-dark-muted">Free:</span> demo-free@mieconomia.com</p>
               <p className="text-dark-muted">(cualquier contraseña)</p>
             </div>
+            <p className="text-xs text-dark-muted text-center mt-2">O <Link to="/register" className="text-accent hover:underline">creá tu propia cuenta</Link> para cargar tus gastos</p>
           </div>
         </form>
       </div>

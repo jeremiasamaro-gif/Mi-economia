@@ -5,14 +5,17 @@ import useExpenseStore from '../../store/expenseStore'
 import PlanBadge from '../shared/PlanBadge'
 
 export default function UsersTable() {
-  const users = useAdminStore((s) => s.getAllUsers())
+  const allUsers = useAdminStore((s) => s.getAllUsers())
+  const registeredUsers = useAdminStore((s) => s.getRegisteredUsers())
   const updatePlan = useAdminStore((s) => s.updateUserPlan)
   const disableUser = useAdminStore((s) => s.disableUser)
   const expenses = useExpenseStore((s) => s.expenses)
   const [search, setSearch] = useState('')
   const [filterPlan, setFilterPlan] = useState('all')
 
-  const filtered = users.filter((u) => {
+  const isDemo = (user) => user.id.startsWith('user-demo')
+
+  const filtered = allUsers.filter((u) => {
     const matchSearch = u.email.toLowerCase().includes(search.toLowerCase()) ||
       u.full_name.toLowerCase().includes(search.toLowerCase())
     const matchPlan = filterPlan === 'all' || u.plan === filterPlan
@@ -23,7 +26,14 @@ export default function UsersTable() {
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-6">Usuarios</h2>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-xl font-bold">Usuarios</h2>
+          <p className="text-sm text-dark-muted mt-1">
+            <span className="font-mono text-accent">{registeredUsers.length}</span> usuarios registrados
+          </p>
+        </div>
+      </div>
 
       <div className="flex items-center gap-3 mb-4">
         <div className="relative flex-1 max-w-sm">
@@ -53,6 +63,7 @@ export default function UsersTable() {
           <thead>
             <tr className="border-b border-dark-border text-dark-muted text-left">
               <th className="px-4 py-3 font-medium">Usuario</th>
+              <th className="px-4 py-3 font-medium">Tipo</th>
               <th className="px-4 py-3 font-medium">Plan</th>
               <th className="px-4 py-3 font-medium">Estado</th>
               <th className="px-4 py-3 font-medium">Registro</th>
@@ -61,11 +72,27 @@ export default function UsersTable() {
             </tr>
           </thead>
           <tbody>
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan={7} className="px-4 py-8 text-center text-dark-muted">
+                  {registeredUsers.length === 0
+                    ? 'No hay usuarios registrados todavía'
+                    : 'No se encontraron resultados'}
+                </td>
+              </tr>
+            )}
             {filtered.map((u) => (
-              <tr key={u.id} className="border-b border-dark-border/50 hover:bg-dark-hover">
+              <tr key={u.id} className={`border-b border-dark-border/50 hover:bg-dark-hover ${isDemo(u) ? 'opacity-50' : ''}`}>
                 <td className="px-4 py-3">
                   <p className="font-medium">{u.full_name}</p>
                   <p className="text-xs text-dark-muted">{u.email}</p>
+                </td>
+                <td className="px-4 py-3">
+                  {isDemo(u) ? (
+                    <span className="text-xs px-2 py-0.5 rounded bg-dark-border text-dark-muted">Demo</span>
+                  ) : (
+                    <span className="text-xs px-2 py-0.5 rounded bg-blue-500/20 text-blue-400">Real</span>
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   <PlanBadge plan={u.plan} />
@@ -84,34 +111,36 @@ export default function UsersTable() {
                 </td>
                 <td className="px-4 py-3 text-right font-mono">{getExpenseCount(u.id)}</td>
                 <td className="px-4 py-3">
-                  <div className="flex gap-1">
-                    {u.plan === 'free' ? (
-                      <button
-                        onClick={() => updatePlan(u.id, 'pro')}
-                        className="text-accent hover:text-accent/80 flex items-center gap-1 text-xs"
-                        title="Upgrade a Pro"
-                      >
-                        <ArrowUpCircle size={14} /> Pro
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => updatePlan(u.id, 'free')}
-                        className="text-yellow-400 hover:text-yellow-300 flex items-center gap-1 text-xs"
-                        title="Downgrade a Free"
-                      >
-                        <ArrowDownCircle size={14} /> Free
-                      </button>
-                    )}
-                    {u.subscription_status !== 'disabled' && (
-                      <button
-                        onClick={() => disableUser(u.id)}
-                        className="text-red-400 hover:text-red-300 flex items-center gap-1 text-xs ml-2"
-                        title="Deshabilitar"
-                      >
-                        <Ban size={14} />
-                      </button>
-                    )}
-                  </div>
+                  {!isDemo(u) && (
+                    <div className="flex gap-1">
+                      {u.plan === 'free' ? (
+                        <button
+                          onClick={() => updatePlan(u.id, 'pro')}
+                          className="text-accent hover:text-accent/80 flex items-center gap-1 text-xs"
+                          title="Upgrade a Pro"
+                        >
+                          <ArrowUpCircle size={14} /> Pro
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => updatePlan(u.id, 'free')}
+                          className="text-yellow-400 hover:text-yellow-300 flex items-center gap-1 text-xs"
+                          title="Downgrade a Free"
+                        >
+                          <ArrowDownCircle size={14} /> Free
+                        </button>
+                      )}
+                      {u.subscription_status !== 'disabled' && (
+                        <button
+                          onClick={() => disableUser(u.id)}
+                          className="text-red-400 hover:text-red-300 flex items-center gap-1 text-xs ml-2"
+                          title="Deshabilitar"
+                        >
+                          <Ban size={14} />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
