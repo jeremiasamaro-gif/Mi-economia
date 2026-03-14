@@ -132,8 +132,22 @@ export default function CfoPage() {
   const currentBalance = currentMonth.income - currentMonth.expense
   const savingsRate = last3Income > 0 ? ((last3Income - last3Expenses) / last3Income) * 100 : 0
 
-  const healthLabel = savingsRate > 30 ? 'Excelente' : savingsRate > 15 ? 'Buena' : savingsRate > 0 ? 'Regular' : 'Crítica'
-  const healthColor = savingsRate > 30 ? 'bg-green-500/20 text-green-400' : savingsRate > 15 ? 'bg-blue-500/20 text-blue-400' : savingsRate > 0 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'
+  // Financial health based on balance_ratio = currentBalance / avgIncome * 100
+  const balanceRatio = last3Income > 0 ? (currentBalance / last3Income) * 100 : (currentBalance <= 0 ? -100 : 0)
+
+  let healthLabel, healthBg, healthText
+  if (currentBalance > 0) {
+    if (balanceRatio >= 20) { healthLabel = 'Excelente'; healthBg = 'bg-[#1e3a2a]'; healthText = 'text-[#4ade80]' }
+    else if (balanceRatio >= 10) { healthLabel = 'Buena'; healthBg = 'bg-[#1e2a3a]'; healthText = 'text-[#60a5fa]' }
+    else { healthLabel = 'Regular'; healthBg = 'bg-[#2a2a1e]'; healthText = 'text-[#fbbf24]' }
+  } else {
+    if (balanceRatio >= -15) { healthLabel = 'En riesgo'; healthBg = 'bg-[#2a2a1e]'; healthText = 'text-[#fbbf24]' }
+    else if (balanceRatio >= -30) { healthLabel = 'Crítica'; healthBg = 'bg-[#2a1e0a]'; healthText = 'text-[#f97316]' }
+    else { healthLabel = 'Muy crítica'; healthBg = 'bg-[#2a1e1e]'; healthText = 'text-[#ef4444]' }
+  }
+  const healthColor = `${healthBg} ${healthText}`
+  const balanceColor = currentBalance > 0 ? 'text-[#4ade80]' : currentBalance === 0 ? 'text-[#9ca3af]' : 'text-[#ef4444]'
+  const healthTooltip = `Tu balance representa el ${balanceRatio.toFixed(1)}% de tu ingreso mensual`
 
   const expenseContext = {
     avgIncome: last3Income,
@@ -220,15 +234,19 @@ export default function CfoPage() {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-xs text-dark-muted">Balance actual</span>
-              <span className={`text-xs font-mono font-semibold ${currentBalance >= 0 ? 'text-accent' : 'text-red-400'}`}>
+              <span className={`text-xs font-mono font-semibold ${balanceColor}`}>
                 ${currentBalance.toLocaleString('es-AR', { maximumFractionDigits: 0 })}
               </span>
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center group relative">
               <span className="text-xs text-dark-muted">Salud financiera</span>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${healthColor}`}>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium cursor-help ${healthColor}`}>
                 {healthLabel}
               </span>
+              {/* Tooltip */}
+              <div className="absolute bottom-full right-0 mb-1.5 px-2.5 py-1.5 bg-dark-bg border border-dark-border rounded-lg text-[10px] text-dark-muted whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg z-10">
+                {healthTooltip}
+              </div>
             </div>
           </div>
         </div>
@@ -267,7 +285,7 @@ export default function CfoPage() {
             <span className="w-1.5 h-1.5 rounded-full bg-accent" />
           </div>
           <div className="text-[10px] text-dark-muted shrink-0">Ingreso: <span className="text-dark-text font-mono">${last3Income.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</span></div>
-          <div className="text-[10px] text-dark-muted shrink-0">Balance: <span className={`font-mono ${currentBalance >= 0 ? 'text-accent' : 'text-red-400'}`}>${currentBalance.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</span></div>
+          <div className="text-[10px] text-dark-muted shrink-0">Balance: <span className={`font-mono ${balanceColor}`}>${currentBalance.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</span></div>
           <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ${healthColor}`}>{healthLabel}</span>
         </div>
 
