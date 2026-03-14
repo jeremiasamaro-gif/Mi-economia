@@ -1,9 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Receipt, PiggyBank, RefreshCw, CreditCard, Shield, LogOut, Trophy, UsersRound, Smartphone, User, ChevronRight } from 'lucide-react'
+import { NavLink } from 'react-router-dom'
+import { LayoutDashboard, Receipt, PiggyBank, RefreshCw, CreditCard, Shield, LogOut, Trophy, UsersRound, Smartphone } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import useAdminStore from '../../store/adminStore'
-import useProfileStore from '../../store/profileStore'
 import PlanBadge from './PlanBadge'
 
 const navItems = [
@@ -21,27 +19,6 @@ export default function Sidebar() {
   const { user, logout, isAdmin, isPro, isTrial, trialDaysLeft } = useAuth()
   const getUserFeatures = useAdminStore((s) => s.getUserFeatures)
   const userFeatures = user ? getUserFeatures(user.id, user.plan) : {}
-  const { profile } = useProfileStore()
-  const navigate = useNavigate()
-  const [showUserMenu, setShowUserMenu] = useState(false)
-  const menuRef = useRef(null)
-
-  useEffect(() => {
-    const handleClick = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setShowUserMenu(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
-
-  const initials = (user?.full_name || '?')
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
 
   return (
     <aside className="w-[220px] h-screen bg-dark-surface border-r border-dark-border flex flex-col fixed left-0 top-0 z-30">
@@ -102,20 +79,13 @@ export default function Sidebar() {
         )}
       </nav>
 
-      {/* User */}
-      <div className="p-3 border-t border-dark-border relative" ref={menuRef}>
-        <button
-          onClick={() => setShowUserMenu(!showUserMenu)}
-          className="flex items-center gap-2 px-3 py-2 mb-1 w-full rounded-lg hover:bg-dark-hover transition-colors"
-        >
-          {profile.avatar ? (
-            <img src={profile.avatar} alt="Avatar" className="w-8 h-8 rounded-full object-cover" />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-accent text-sm font-bold">
-              {initials}
-            </div>
-          )}
-          <div className="flex-1 min-w-0 text-left">
+      {/* User info (simple, no dropdown) */}
+      <div className="p-3 border-t border-dark-border">
+        <div className="flex items-center gap-2 px-3 py-2">
+          <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-accent text-sm font-bold">
+            {user?.full_name?.charAt(0) || '?'}
+          </div>
+          <div className="flex-1 min-w-0">
             <p className="text-sm truncate">{user?.full_name}</p>
             {isTrial ? (
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 font-medium">
@@ -125,29 +95,7 @@ export default function Sidebar() {
               <PlanBadge plan={user?.plan} />
             )}
           </div>
-          <ChevronRight size={14} className={`text-dark-muted transition-transform ${showUserMenu ? 'rotate-90' : ''}`} />
-        </button>
-
-        {/* Dropdown menu */}
-        {showUserMenu && (
-          <div className="absolute bottom-full left-3 right-3 mb-1 bg-dark-surface border border-dark-border rounded-lg shadow-xl overflow-hidden z-40">
-            <button
-              onClick={() => { navigate('/app/perfil'); setShowUserMenu(false) }}
-              className="flex items-center gap-2 px-3 py-2.5 w-full text-sm text-dark-muted hover:text-dark-text hover:bg-dark-hover transition-colors"
-            >
-              <User size={16} />
-              Mi Perfil
-            </button>
-            <div className="border-t border-dark-border" />
-            <button
-              onClick={() => { logout(); setShowUserMenu(false) }}
-              className="flex items-center gap-2 px-3 py-2.5 w-full text-sm text-dark-muted hover:text-red-400 hover:bg-dark-hover transition-colors"
-            >
-              <LogOut size={16} />
-              Cerrar sesión
-            </button>
-          </div>
-        )}
+        </div>
       </div>
     </aside>
   )

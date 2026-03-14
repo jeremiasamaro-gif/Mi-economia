@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Sidebar from '../components/shared/Sidebar'
+import TopBar from '../components/shared/TopBar'
 import Dashboard from '../components/app/Dashboard'
 import ExpenseTable from '../components/app/ExpenseTable'
 import BudgetManager from '../components/app/BudgetManager'
@@ -18,6 +19,7 @@ export default function AppPage() {
     <div className="flex min-h-screen bg-dark-bg">
       <Sidebar />
       <main className="flex-1 ml-[220px] p-6 max-w-[1200px]">
+        <TopBar />
         <Routes>
           <Route index element={<Dashboard />} />
           <Route path="expenses" element={<ExpenseTable />} />
