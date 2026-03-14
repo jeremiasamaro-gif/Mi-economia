@@ -6,30 +6,23 @@ import { usePlan } from '../../hooks/usePlan'
 import useCfoStore from '../../store/cfoStore'
 import { useTranslation } from '../../hooks/useTranslation'
 
-// CFO Avatar SVG
+// CFO Avatar — Toro image
 const CfoAvatar = ({ size = 64, className = '' }) => (
-  <div
-    className={`rounded-full bg-gradient-to-br from-accent/30 to-accent/10 border-2 border-accent/30 flex items-center justify-center ${className}`}
+  <img
+    src="/toro-avatar.jpeg"
+    alt="Asistente Financiero"
+    className={`rounded-full border-2 border-accent/30 object-cover ${className}`}
     style={{ width: size, height: size }}
-  >
-    <svg width={size * 0.5} height={size * 0.5} viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="8" r="4" stroke="#4ade80" strokeWidth="1.5" />
-      <path d="M5 20c0-3.87 3.13-7 7-7s7 3.13 7 7" stroke="#4ade80" strokeWidth="1.5" strokeLinecap="round" />
-      <rect x="9" y="14" width="6" height="3" rx="0.5" fill="#4ade80" opacity="0.3" />
-      <path d="M10 14v-1.5M14 14v-1.5" stroke="#4ade80" strokeWidth="1" />
-    </svg>
-  </div>
+  />
 )
 
 // Mini CFO avatar for chat bubbles
 const CfoMiniAvatar = () => (
-  <div className="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
-    <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-      <rect x="2" y="5" width="12" height="9" rx="1.5" stroke="#4ade80" strokeWidth="1" fill="none" />
-      <path d="M5.5 5V3.5C5.5 2.67 6.17 2 7 2h2c.83 0 1.5.67 1.5 1.5V5" stroke="#4ade80" strokeWidth="1" fill="none" />
-      <rect x="6.5" y="7.5" width="3" height="2" rx="0.5" fill="#4ade80" />
-    </svg>
-  </div>
+  <img
+    src="/toro-avatar.jpeg"
+    alt="CFO"
+    className="w-5 h-5 rounded-full object-cover shrink-0"
+  />
 )
 
 // Expandable section inside CFO bubble

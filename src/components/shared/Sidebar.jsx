@@ -6,14 +6,13 @@ import useAdminStore from '../../store/adminStore'
 import { useTranslation } from '../../hooks/useTranslation'
 import PlanBadge from './PlanBadge'
 
-// Inline SVG briefcase/suit icon for CFO
+// Toro avatar icon for CFO
 const CfoIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="2" y="5" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3" fill="none" />
-    <path d="M5.5 5V3.5C5.5 2.67 6.17 2 7 2h2c.83 0 1.5.67 1.5 1.5V5" stroke="currentColor" strokeWidth="1.3" fill="none" />
-    <path d="M2 8.5h12" stroke="currentColor" strokeWidth="1.3" />
-    <rect x="6.5" y="7.5" width="3" height="2" rx="0.5" fill="currentColor" />
-  </svg>
+  <img
+    src="/toro-avatar.jpeg"
+    alt="CFO"
+    className="w-5 h-5 rounded-full object-cover"
+  />
 )
 
 const NAV_KEYS = [
