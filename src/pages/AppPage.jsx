@@ -9,6 +9,7 @@ import Achievements from '../components/app/Achievements'
 import GroupSettings from '../components/app/GroupSettings'
 import WhatsAppSettings from '../components/app/WhatsAppSettings'
 import ProfilePage from './ProfilePage'
+import CfoPage from '../components/app/CfoPage'
 import AIChat from '../components/app/AIChat'
 import { usePlan } from '../hooks/usePlan'
 
@@ -44,6 +45,7 @@ export default function AppPage() {
             element={canUseWhatsApp ? <WhatsAppSettings /> : <Navigate to="/pricing" replace />}
           />
           <Route path="perfil" element={<ProfilePage />} />
+          <Route path="cfo" element={<CfoPage />} />
         </Routes>
       </main>
       <AIChat />
