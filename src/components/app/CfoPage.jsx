@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useExpenses } from '../../hooks/useExpenses'
 import { usePlan } from '../../hooks/usePlan'
 import useCfoStore from '../../store/cfoStore'
+import { useTranslation } from '../../hooks/useTranslation'
 
 // CFO Avatar SVG
 const CfoAvatar = ({ size = 64, className = '' }) => (
@@ -30,12 +31,6 @@ const CfoMiniAvatar = () => (
     </svg>
   </div>
 )
-
-const SUGGESTED_PILLS = [
-  '¿Puedo comprarme zapatillas por $120.000?',
-  '¿Cómo estoy financieramente este mes?',
-  '¿Puedo permitirme salir a comer más seguido?',
-]
 
 // Expandable section inside CFO bubble
 function ExpandableSection({ icon, title, content }) {
@@ -73,6 +68,8 @@ function VerdictBadge({ verdict, title, subtitle }) {
 
 // CFO Response Bubble
 function CfoBubble({ content }) {
+  const { t } = useTranslation()
+
   if (content.type === 'purchase') {
     return (
       <div className="flex gap-2 items-start">
@@ -80,11 +77,11 @@ function CfoBubble({ content }) {
         <div className="max-w-[85%] bg-[#1a1d23] border border-[#2a2d35] rounded-xl rounded-bl-sm px-3 py-2.5 text-sm">
           <VerdictBadge verdict={content.verdict} title={content.verdictTitle} subtitle={content.verdictSubtitle} />
           <p className="text-dark-text leading-relaxed">{content.message}</p>
-          <ExpandableSection icon="📊" title="Análisis" content={content.analysis} />
-          <ExpandableSection icon="💥" title="Impacto" content={content.impact} />
-          <ExpandableSection icon="💡" title="Consejo" content={content.recommendation} />
+          <ExpandableSection icon="📊" title={t('cfo.analysis')} content={content.analysis} />
+          <ExpandableSection icon="💥" title={t('cfo.impact')} content={content.impact} />
+          <ExpandableSection icon="💡" title={t('cfo.advice')} content={content.recommendation} />
           {content.alternative && (
-            <ExpandableSection icon="🔄" title="Alternativa" content={content.alternative} />
+            <ExpandableSection icon="🔄" title={t('cfo.alternative')} content={content.alternative} />
           )}
         </div>
       </div>
@@ -98,10 +95,10 @@ function CfoBubble({ content }) {
       <div className="max-w-[85%] bg-[#1a1d23] border border-[#2a2d35] rounded-xl rounded-bl-sm px-3 py-2.5 text-sm">
         <p className="text-dark-text leading-relaxed">{content.message}</p>
         {content.insight && (
-          <ExpandableSection icon="📊" title="Insight" content={content.insight} />
+          <ExpandableSection icon="📊" title={t('cfo.insight')} content={content.insight} />
         )}
         {content.recommendation && (
-          <ExpandableSection icon="💡" title="Recomendación" content={content.recommendation} />
+          <ExpandableSection icon="💡" title={t('cfo.recommendation')} content={content.recommendation} />
         )}
       </div>
     </div>
@@ -109,6 +106,7 @@ function CfoBubble({ content }) {
 }
 
 export default function CfoPage() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const { isPro } = usePlan()
   const { expenses, currentMonthExpenses, monthlyTotals, categoryTotals } = useExpenses()
@@ -137,17 +135,19 @@ export default function CfoPage() {
 
   let healthLabel, healthBg, healthText
   if (currentBalance > 0) {
-    if (balanceRatio >= 20) { healthLabel = 'Excelente'; healthBg = 'bg-[#1e3a2a]'; healthText = 'text-[#4ade80]' }
-    else if (balanceRatio >= 10) { healthLabel = 'Buena'; healthBg = 'bg-[#1e2a3a]'; healthText = 'text-[#60a5fa]' }
-    else { healthLabel = 'Regular'; healthBg = 'bg-[#2a2a1e]'; healthText = 'text-[#fbbf24]' }
+    if (balanceRatio >= 20) { healthLabel = t('cfo.excellent'); healthBg = 'bg-[#1e3a2a]'; healthText = 'text-[#4ade80]' }
+    else if (balanceRatio >= 10) { healthLabel = t('cfo.good'); healthBg = 'bg-[#1e2a3a]'; healthText = 'text-[#60a5fa]' }
+    else { healthLabel = t('cfo.fair'); healthBg = 'bg-[#2a2a1e]'; healthText = 'text-[#fbbf24]' }
   } else {
-    if (balanceRatio >= -15) { healthLabel = 'En riesgo'; healthBg = 'bg-[#2a2a1e]'; healthText = 'text-[#fbbf24]' }
-    else if (balanceRatio >= -30) { healthLabel = 'Crítica'; healthBg = 'bg-[#2a1e0a]'; healthText = 'text-[#f97316]' }
-    else { healthLabel = 'Muy crítica'; healthBg = 'bg-[#2a1e1e]'; healthText = 'text-[#ef4444]' }
+    if (balanceRatio >= -15) { healthLabel = t('cfo.atRisk'); healthBg = 'bg-[#2a2a1e]'; healthText = 'text-[#fbbf24]' }
+    else if (balanceRatio >= -30) { healthLabel = t('cfo.critical'); healthBg = 'bg-[#2a1e0a]'; healthText = 'text-[#f97316]' }
+    else { healthLabel = t('cfo.severe'); healthBg = 'bg-[#2a1e1e]'; healthText = 'text-[#ef4444]' }
   }
   const healthColor = `${healthBg} ${healthText}`
   const balanceColor = currentBalance > 0 ? 'text-[#4ade80]' : currentBalance === 0 ? 'text-[#9ca3af]' : 'text-[#ef4444]'
-  const healthTooltip = `Tu balance representa el ${balanceRatio.toFixed(1)}% de tu ingreso mensual`
+  const healthTooltip = t('cfo.healthTooltip', { ratio: balanceRatio.toFixed(1) })
+
+  const suggestedPills = [t('cfo.pill1'), t('cfo.pill2'), t('cfo.pill3')]
 
   const expenseContext = {
     avgIncome: last3Income,
@@ -211,35 +211,35 @@ export default function CfoPage() {
             <div className={`mx-auto mb-3 ${loading ? 'animate-float' : ''}`}>
               <CfoAvatar size={72} className="mx-auto" />
             </div>
-            <h3 className="text-lg font-bold text-dark-text">Dr. EconomIA</h3>
-            <p className="text-xs text-dark-muted">Tu CFO Personal</p>
+            <h3 className="text-lg font-bold text-dark-text">{t('cfo.title')}</h3>
+            <p className="text-xs text-dark-muted">{t('cfo.subtitle')}</p>
             <div className="flex items-center justify-center gap-1.5 mt-2">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              <span className="text-xs text-accent">Disponible</span>
+              <span className="text-xs text-accent">{t('cfo.available')}</span>
             </div>
             {loading && (
-              <p className="text-xs text-accent/60 mt-1 animate-pulse">Analizando tus datos...</p>
+              <p className="text-xs text-accent/60 mt-1 animate-pulse">{t('cfo.analyzing')}</p>
             )}
           </div>
 
           {/* Mini summary card */}
           <div className="space-y-3 pt-3 border-t border-dark-border">
             <div className="flex justify-between items-center">
-              <span className="text-xs text-dark-muted">Ingreso promedio</span>
+              <span className="text-xs text-dark-muted">{t('cfo.avgIncome')}</span>
               <span className="text-xs font-mono text-dark-text">${last3Income.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-xs text-dark-muted">Gasto promedio</span>
+              <span className="text-xs text-dark-muted">{t('cfo.avgExpenses')}</span>
               <span className="text-xs font-mono text-dark-text">${last3Expenses.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-xs text-dark-muted">Balance actual</span>
+              <span className="text-xs text-dark-muted">{t('cfo.currentBalance')}</span>
               <span className={`text-xs font-mono font-semibold ${balanceColor}`}>
                 ${currentBalance.toLocaleString('es-AR', { maximumFractionDigits: 0 })}
               </span>
             </div>
             <div className="flex justify-between items-center group relative">
-              <span className="text-xs text-dark-muted">Salud financiera</span>
+              <span className="text-xs text-dark-muted">{t('cfo.financialHealth')}</span>
               <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium cursor-help ${healthColor}`}>
                 {healthLabel}
               </span>
@@ -257,21 +257,21 @@ export default function CfoPage() {
         {/* Chat header */}
         <div className="px-4 py-3 border-b border-dark-border flex items-center justify-between shrink-0">
           <div>
-            <h3 className="text-sm font-semibold text-dark-text">Consultá a tu CFO</h3>
-            <p className="text-[10px] text-dark-muted">Analizá cualquier compra o preguntá sobre tus finanzas</p>
+            <h3 className="text-sm font-semibold text-dark-text">{t('cfo.chatTitle')}</h3>
+            <p className="text-[10px] text-dark-muted">{t('cfo.chatSubtitle')}</p>
           </div>
           <div className="flex items-center gap-2">
             <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${isPro ? 'bg-accent/20 text-accent' : 'bg-dark-hover text-dark-muted'}`}>
-              {isPro ? 'Ilimitado ✓' : `${Math.max(0, freeLimit - consultationCount)}/${freeLimit} consultas`}
+              {isPro ? t('cfo.unlimited') : `${Math.max(0, freeLimit - consultationCount)}/${freeLimit} ${t('cfo.consultations')}`}
             </span>
             {messages.length > 0 && (
               <button
                 onClick={() => setShowClearConfirm(true)}
                 className="text-xs text-dark-muted hover:text-dark-text flex items-center gap-1 px-2 py-1 rounded hover:bg-dark-hover transition-colors"
-                title="Nueva consulta"
+                title={t('cfo.newConsultation')}
               >
                 <RotateCcw size={12} />
-                Nueva
+                {t('cfo.newConsultation')}
               </button>
             )}
           </div>
@@ -281,11 +281,11 @@ export default function CfoPage() {
         <div className="lg:hidden px-4 py-2 border-b border-dark-border flex items-center gap-4 overflow-x-auto shrink-0">
           <div className="flex items-center gap-1.5 shrink-0">
             <CfoMiniAvatar />
-            <span className="text-xs font-semibold text-dark-text">Dr. EconomIA</span>
+            <span className="text-xs font-semibold text-dark-text">{t('cfo.title')}</span>
             <span className="w-1.5 h-1.5 rounded-full bg-accent" />
           </div>
-          <div className="text-[10px] text-dark-muted shrink-0">Ingreso: <span className="text-dark-text font-mono">${last3Income.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</span></div>
-          <div className="text-[10px] text-dark-muted shrink-0">Balance: <span className={`font-mono ${balanceColor}`}>${currentBalance.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</span></div>
+          <div className="text-[10px] text-dark-muted shrink-0">{t('cfo.avgIncome')}: <span className="text-dark-text font-mono">${last3Income.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</span></div>
+          <div className="text-[10px] text-dark-muted shrink-0">{t('cfo.currentBalance')}: <span className={`font-mono ${balanceColor}`}>${currentBalance.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</span></div>
           <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ${healthColor}`}>{healthLabel}</span>
         </div>
 
@@ -297,10 +297,10 @@ export default function CfoPage() {
               <div className="lg:hidden mb-4">
                 <CfoAvatar size={56} className="mx-auto" />
               </div>
-              <p className="text-dark-muted text-sm mb-1">¡Hola! Soy el Dr. EconomIA, tu CFO personal.</p>
-              <p className="text-dark-muted text-xs mb-5">Preguntame sobre cualquier compra o tus finanzas.</p>
+              <p className="text-dark-muted text-sm mb-1">{t('cfo.emptyGreeting')}</p>
+              <p className="text-dark-muted text-xs mb-5">{t('cfo.emptySubtext')}</p>
               <div className="flex flex-wrap justify-center gap-2 max-w-md">
-                {SUGGESTED_PILLS.map((pill) => (
+                {suggestedPills.map((pill) => (
                   <button
                     key={pill}
                     onClick={() => handlePill(pill)}
@@ -352,8 +352,8 @@ export default function CfoPage() {
         <div className="px-4 py-3 border-t border-dark-border shrink-0">
           {!canConsult ? (
             <div className="text-center py-2">
-              <p className="text-xs text-dark-muted">Alcanzaste el límite de {freeLimit} consultas gratis.</p>
-              <a href="/pricing" className="text-xs text-accent hover:underline">Mejorá a Pro para consultas ilimitadas</a>
+              <p className="text-xs text-dark-muted">{t('cfo.limitReached', { limit: freeLimit })}</p>
+              <a href="/pricing" className="text-xs text-accent hover:underline">{t('cfo.upgradeCta')}</a>
             </div>
           ) : (
             <div className="flex gap-2 items-end">
@@ -363,7 +363,7 @@ export default function CfoPage() {
                   value={input}
                   onChange={handleTextareaInput}
                   onKeyDown={handleKeyDown}
-                  placeholder="Preguntale a tu CFO... Ej: ¿Puedo comprarme un celular?"
+                  placeholder={t('cfo.inputPlaceholder')}
                   maxLength={300}
                   rows={1}
                   disabled={loading}
@@ -392,14 +392,14 @@ export default function CfoPage() {
       {showClearConfirm && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowClearConfirm(false)}>
           <div className="bg-dark-surface border border-dark-border rounded-xl p-5 w-full max-w-xs mx-4" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-sm font-bold text-dark-text mb-2">Nueva consulta</h3>
-            <p className="text-xs text-dark-muted mb-4">Se va a borrar la conversación actual. ¿Continuar?</p>
+            <h3 className="text-sm font-bold text-dark-text mb-2">{t('cfo.clearTitle')}</h3>
+            <p className="text-xs text-dark-muted mb-4">{t('cfo.clearMessage')}</p>
             <div className="flex gap-2">
               <button onClick={() => setShowClearConfirm(false)} className="flex-1 px-3 py-2 bg-dark-hover text-dark-text rounded-lg text-xs hover:bg-dark-border transition-colors">
-                Cancelar
+                {t('common.cancel')}
               </button>
               <button onClick={handleClear} className="flex-1 px-3 py-2 bg-accent text-dark-bg rounded-lg text-xs font-medium hover:bg-accent/90 transition-colors">
-                Nueva consulta
+                {t('cfo.clearTitle')}
               </button>
             </div>
           </div>

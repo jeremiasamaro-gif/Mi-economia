@@ -1,31 +1,28 @@
 import { useNavigate } from 'react-router-dom'
 import { Check, X, ArrowLeft } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
-
-const features = [
-  { name: 'Gastos por mes', free: 'Hasta 50', pro: 'Ilimitados' },
-  { name: 'Resumen financiero', free: true, pro: true },
-  { name: 'Gráficos interactivos', free: false, pro: true },
-  { name: 'Asistente IA EconomIA', free: false, pro: true },
-  { name: 'Presupuestos por categoría', free: false, pro: true },
-  { name: 'Gastos recurrentes', free: false, pro: true },
-  { name: 'Tags y filtros', free: false, pro: true },
-  { name: 'División de gastos', free: false, pro: true },
-  { name: 'Exportar/importar CSV', free: false, pro: true },
-  { name: 'Alertas proactivas de IA', free: false, pro: true },
-]
+import { useTranslation } from '../hooks/useTranslation'
 
 export default function PricingPage() {
   const { user } = useAuth()
+  const { t } = useTranslation()
   const navigate = useNavigate()
+
+  const features = [
+    { name: t('plan.free.1'), free: t('plan.free.1'), pro: t('plan.pro.2') },
+    { name: t('plan.free.3'), free: true, pro: true },
+    { name: t('plan.pro.4'), free: false, pro: true },
+    { name: t('plan.pro.3'), free: false, pro: true },
+    { name: t('plan.pro.5'), free: false, pro: true },
+    { name: t('plan.pro.6'), free: false, pro: true },
+    { name: t('plan.pro.7'), free: false, pro: true },
+    { name: t('plan.pro.8'), free: false, pro: true },
+    { name: t('plan.pro.9'), free: false, pro: true },
+    { name: t('plan.pro.10'), free: false, pro: true },
+  ]
 
   const handleSubscribe = () => {
     // TODO MP: replace with MercadoPago Checkout Pro API call
-    // Creates a preference with:
-    //   title: "mi EconomIA Pro — 1 mes"
-    //   unit_price: PRICE_PLACEHOLDER (ARS)
-    //   back_urls: { success: '/payment/success', failure: '/payment/failure' }
-    // Then redirects to MP checkout URL
     alert('MercadoPago: Se generará un link de pago cuando se configure la integración.')
   }
 
@@ -43,7 +40,7 @@ export default function PricingPage() {
             onClick={() => navigate('/app')}
             className="flex items-center gap-1 text-sm text-dark-muted hover:text-accent mb-6"
           >
-            <ArrowLeft size={14} /> Volver al app
+            <ArrowLeft size={14} /> {t('common.back')}
           </button>
         )}
 
@@ -51,7 +48,7 @@ export default function PricingPage() {
           <h1 className="text-3xl font-bold mb-2">
             mi Econom<span className="text-accent">IA</span>
           </h1>
-          <p className="text-dark-muted">Elegí el plan que mejor se adapte a vos</p>
+          <p className="text-dark-muted">{t('pricing.title')}</p>
         </div>
 
         {/* Plans */}
@@ -62,25 +59,25 @@ export default function PricingPage() {
           }`}>
             {user?.plan === 'free' && (
               <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded-full mb-4 inline-block">
-                Tu plan actual
+                {t('plan.activePlan')}
               </span>
             )}
-            <h3 className="text-xl font-bold mb-1">Free</h3>
+            <h3 className="text-xl font-bold mb-1">{t('plan.free')}</h3>
             <p className="text-3xl font-bold font-mono mb-1">
               $0 <span className="text-sm font-normal text-dark-muted">/mes</span>
             </p>
-            <p className="text-sm text-dark-muted mb-6">Para empezar a organizar tus finanzas</p>
+            <p className="text-sm text-dark-muted mb-6">{t('plan.freeForever')}</p>
 
             {!user ? (
               <button
                 onClick={() => navigate('/register')}
                 className="w-full border border-accent text-accent font-semibold py-2.5 rounded-lg hover:bg-accent/10"
               >
-                Empezar gratis
+                {t('pricing.startFree')}
               </button>
             ) : user.plan === 'free' ? (
               <button disabled className="w-full border border-dark-border text-dark-muted py-2.5 rounded-lg cursor-default">
-                Plan actual
+                {t('plan.activePlan')}
               </button>
             ) : null}
           </div>
@@ -90,30 +87,30 @@ export default function PricingPage() {
             user?.plan === 'pro' ? 'border-accent' : 'border-dark-border'
           }`}>
             <div className="absolute top-0 right-0 bg-accent text-dark-bg text-xs font-bold px-3 py-1 rounded-bl-lg">
-              RECOMENDADO
+              {t('plan.recommended')}
             </div>
             {user?.plan === 'pro' && (
               <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded-full mb-4 inline-block">
-                Tu plan actual
+                {t('plan.activePlan')}
               </span>
             )}
-            <h3 className="text-xl font-bold mb-1">Pro</h3>
+            <h3 className="text-xl font-bold mb-1">{t('plan.pro')}</h3>
             <p className="text-3xl font-bold font-mono mb-1">
               <span className="text-accent">$2.999</span>{' '}
               <span className="text-sm font-normal text-dark-muted">/mes</span>
             </p>
-            <p className="text-sm text-dark-muted mb-6">Todo lo que necesitás para tus finanzas</p>
+            <p className="text-sm text-dark-muted mb-6">{t('plan.pricePerMonth')}</p>
 
             {user?.plan === 'pro' ? (
               <button disabled className="w-full border border-accent text-accent py-2.5 rounded-lg cursor-default">
-                Plan actual
+                {t('plan.activePlan')}
               </button>
             ) : (
               <button
                 onClick={handleSubscribe}
                 className="w-full bg-accent text-dark-bg font-semibold py-2.5 rounded-lg hover:bg-accent/90"
               >
-                Suscribirse a Pro
+                {t('pricing.subscribePro')}
               </button>
             )}
           </div>
@@ -124,9 +121,9 @@ export default function PricingPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-dark-border">
-                <th className="px-6 py-4 text-left font-medium text-dark-muted">Funcionalidad</th>
-                <th className="px-6 py-4 text-center font-medium">Free</th>
-                <th className="px-6 py-4 text-center font-medium text-accent">Pro</th>
+                <th className="px-6 py-4 text-left font-medium text-dark-muted">{t('expenses.description')}</th>
+                <th className="px-6 py-4 text-center font-medium">{t('plan.free')}</th>
+                <th className="px-6 py-4 text-center font-medium text-accent">{t('plan.pro')}</th>
               </tr>
             </thead>
             <tbody>

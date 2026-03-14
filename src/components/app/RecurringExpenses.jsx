@@ -3,11 +3,13 @@ import { Plus, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
 import useRecurringStore from '../../store/recurringStore'
 import { useAuth } from '../../hooks/useAuth'
 import { CATEGORIES } from '../../store/mockData'
+import { useTranslation } from '../../hooks/useTranslation'
 
 const formatARS = (n) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 
 export default function RecurringExpenses() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const items = useRecurringStore((s) => s.getForUser(user?.id))
   const addRecurring = useRecurringStore((s) => s.addRecurring)
@@ -49,7 +51,7 @@ export default function RecurringExpenses() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold">Gastos recurrentes</h2>
+          <h2 className="text-xl font-bold">{t('recurring.title')}</h2>
           <p className="text-sm text-dark-muted mt-1">
             Total mensual: <span className="font-mono text-accent">{formatARS(totalMonthly)}</span>
           </p>
@@ -58,7 +60,7 @@ export default function RecurringExpenses() {
           onClick={() => setShowAdd(!showAdd)}
           className="flex items-center gap-2 bg-accent text-dark-bg px-4 py-2 rounded-lg text-sm font-semibold hover:bg-accent/90"
         >
-          <Plus size={16} /> Agregar
+          <Plus size={16} /> {t('expenses.add')}
         </button>
       </div>
 
@@ -67,7 +69,7 @@ export default function RecurringExpenses() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <input
               type="text"
-              placeholder="Descripción"
+              placeholder={t('expenses.description')}
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               maxLength={200}
@@ -84,7 +86,7 @@ export default function RecurringExpenses() {
             </select>
             <input
               type="number"
-              placeholder="Monto"
+              placeholder={t('expenses.amount')}
               value={form.amount}
               onChange={(e) => setForm({ ...form, amount: e.target.value })}
               min="0"
@@ -97,16 +99,16 @@ export default function RecurringExpenses() {
               onChange={(e) => setForm({ ...form, type: e.target.value })}
               className="bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent"
             >
-              <option value="expense">Gasto</option>
-              <option value="income">Ingreso</option>
+              <option value="expense">{t('expenses.expense')}</option>
+              <option value="income">{t('expenses.income')}</option>
             </select>
             <select
               value={form.frequency}
               onChange={(e) => setForm({ ...form, frequency: e.target.value })}
               className="bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent"
             >
-              <option value="monthly">Mensual</option>
-              <option value="weekly">Semanal</option>
+              <option value="monthly">{t('recurring.monthly')}</option>
+              <option value="weekly">{t('recurring.weekly')}</option>
             </select>
             <input
               type="date"
@@ -116,10 +118,10 @@ export default function RecurringExpenses() {
             />
             <div className="flex-1" />
             <button onClick={handleAdd} className="bg-accent text-dark-bg px-4 py-2 rounded-lg text-sm font-semibold">
-              Guardar
+              {t('expenses.save')}
             </button>
             <button onClick={() => setShowAdd(false)} className="text-dark-muted hover:text-dark-text text-sm">
-              Cancelar
+              {t('expenses.cancel')}
             </button>
           </div>
         </div>
@@ -127,19 +129,19 @@ export default function RecurringExpenses() {
 
       {/* Active */}
       <div className="space-y-2 mb-6">
-        <h3 className="text-sm font-semibold text-dark-muted uppercase tracking-wide mb-3">Activos</h3>
+        <h3 className="text-sm font-semibold text-dark-muted uppercase tracking-wide mb-3">{t('recurring.active')}</h3>
         {active.map((item) => (
           <RecurringItem key={item.id} item={item} onToggle={toggleActive} onDelete={deleteRecurring} />
         ))}
         {active.length === 0 && (
-          <p className="text-sm text-dark-muted py-4 text-center">No hay gastos recurrentes activos</p>
+          <p className="text-sm text-dark-muted py-4 text-center">{t('recurring.noRecurring')}</p>
         )}
       </div>
 
       {/* Inactive */}
       {inactive.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-dark-muted uppercase tracking-wide mb-3">Inactivos</h3>
+          <h3 className="text-sm font-semibold text-dark-muted uppercase tracking-wide mb-3">{t('recurring.paused')}</h3>
           {inactive.map((item) => (
             <RecurringItem key={item.id} item={item} onToggle={toggleActive} onDelete={deleteRecurring} />
           ))}
@@ -150,6 +152,7 @@ export default function RecurringExpenses() {
 }
 
 function RecurringItem({ item, onToggle, onDelete }) {
+  const { t } = useTranslation()
   return (
     <div className={`bg-dark-surface border border-dark-border rounded-xl p-4 flex items-center gap-4 ${!item.active ? 'opacity-50' : ''}`}>
       <button onClick={() => onToggle(item.id)} className="text-dark-muted hover:text-accent">
@@ -158,7 +161,7 @@ function RecurringItem({ item, onToggle, onDelete }) {
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{item.description}</p>
         <p className="text-xs text-dark-muted">
-          {item.category} · {item.frequency === 'monthly' ? 'Mensual' : 'Semanal'} · Próximo: {item.next_date}
+          {item.category} · {item.frequency === 'monthly' ? t('recurring.monthly') : t('recurring.weekly')} · {t('recurring.nextDate') + ':'} {item.next_date}
         </p>
       </div>
       <div className="text-right">

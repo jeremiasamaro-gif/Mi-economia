@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Plus, Trash2, Edit3, Check, X, Tag, Users, PenLine, ScanLine } from 'lucide-react'
 import { useExpenses } from '../../hooks/useExpenses'
 import { usePlan } from '../../hooks/usePlan'
+import { useTranslation } from '../../hooks/useTranslation'
 import { CATEGORIES } from '../../store/mockData'
 import UpgradeModal from '../shared/UpgradeModal'
 import TicketScanner from './TicketScanner'
@@ -12,6 +13,7 @@ const formatARS = (n) =>
 export default function ExpenseTable() {
   const { expenses, currentMonthCount, canAdd, addExpense, updateExpense, deleteExpense } = useExpenses()
   const { maxExpenses, isPro, canUseTags, canUseSplitting, canUseScanner } = usePlan()
+  const { t } = useTranslation()
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const [showAddMenu, setShowAddMenu] = useState(false)
@@ -87,11 +89,11 @@ export default function ExpenseTable() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold">Gastos</h2>
+          <h2 className="text-xl font-bold">{t('expenses.title')}</h2>
           {!isPro && (
             <p className="text-sm text-dark-muted mt-1">
               <span className="font-mono text-accent">{currentMonthCount}</span>
-              <span className="text-dark-muted">/{maxExpenses} gastos este mes</span>
+              <span className="text-dark-muted">/{maxExpenses} {t('expenses.monthCount')}</span>
             </p>
           )}
         </div>
@@ -100,7 +102,7 @@ export default function ExpenseTable() {
             onClick={() => setShowAddMenu(!showAddMenu)}
             className="flex items-center gap-2 bg-accent text-dark-bg px-4 py-2 rounded-lg text-sm font-semibold hover:bg-accent/90"
           >
-            <Plus size={16} /> Agregar
+            <Plus size={16} /> {t('expenses.add')}
           </button>
 
           {showAddMenu && (
@@ -115,7 +117,7 @@ export default function ExpenseTable() {
               >
                 <PenLine size={18} className="text-accent" />
                 <div>
-                  <p className="text-sm font-medium">Cargar a mano</p>
+                  <p className="text-sm font-medium">{t('expenses.addManual')}</p>
                   <p className="text-[11px] text-dark-muted">Completá los datos vos mismo</p>
                 </div>
               </button>
@@ -130,7 +132,7 @@ export default function ExpenseTable() {
               >
                 <ScanLine size={18} className="text-accent" />
                 <div>
-                  <p className="text-sm font-medium">Escanear ticket</p>
+                  <p className="text-sm font-medium">{t('expenses.scanTicket')}</p>
                   <p className="text-[11px] text-dark-muted">Foto o cámara — lee el total automático</p>
                 </div>
               </button>
@@ -174,7 +176,7 @@ export default function ExpenseTable() {
             </select>
             <input
               type="text"
-              placeholder="Descripción"
+              placeholder={t('expenses.description')}
               value={newExpense.description}
               onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })}
               maxLength={200}
@@ -182,7 +184,7 @@ export default function ExpenseTable() {
             />
             <input
               type="number"
-              placeholder="Monto"
+              placeholder={t('expenses.amount')}
               value={newExpense.amount}
               onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
               min="0"
@@ -195,8 +197,8 @@ export default function ExpenseTable() {
               onChange={(e) => setNewExpense({ ...newExpense, type: e.target.value })}
               className="bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent"
             >
-              <option value="expense">Gasto</option>
-              <option value="income">Ingreso</option>
+              <option value="expense">{t('expenses.expense')}</option>
+              <option value="income">{t('expenses.income')}</option>
             </select>
 
             {canUseTags && (
@@ -236,10 +238,10 @@ export default function ExpenseTable() {
 
             <div className="flex-1" />
             <button onClick={handleAdd} className="bg-accent text-dark-bg px-4 py-2 rounded-lg text-sm font-semibold hover:bg-accent/90">
-              Guardar
+              {t('expenses.save')}
             </button>
             <button onClick={() => setShowAdd(false)} className="text-dark-muted hover:text-dark-text text-sm">
-              Cancelar
+              {t('expenses.cancel')}
             </button>
           </div>
         </div>
@@ -251,12 +253,12 @@ export default function ExpenseTable() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-dark-border text-dark-muted text-left">
-                <th className="px-4 py-3 font-medium">Fecha</th>
-                <th className="px-4 py-3 font-medium">Categoría</th>
-                <th className="px-4 py-3 font-medium">Descripción</th>
-                <th className="px-4 py-3 font-medium text-right">Monto</th>
-                <th className="px-4 py-3 font-medium">Tipo</th>
-                {isPro && <th className="px-4 py-3 font-medium">Tags</th>}
+                <th className="px-4 py-3 font-medium">{t('expenses.date')}</th>
+                <th className="px-4 py-3 font-medium">{t('expenses.category')}</th>
+                <th className="px-4 py-3 font-medium">{t('expenses.description')}</th>
+                <th className="px-4 py-3 font-medium text-right">{t('expenses.amount')}</th>
+                <th className="px-4 py-3 font-medium">{t('expenses.type')}</th>
+                {isPro && <th className="px-4 py-3 font-medium">{t('expenses.tags')}</th>}
                 <th className="px-4 py-3 font-medium w-20"></th>
               </tr>
             </thead>
@@ -312,8 +314,8 @@ export default function ExpenseTable() {
                           onChange={(e) => setEditData({ ...editData, type: e.target.value })}
                           className="bg-dark-bg border border-dark-border rounded px-2 py-1 text-sm focus:outline-none focus:border-accent"
                         >
-                          <option value="expense">Gasto</option>
-                          <option value="income">Ingreso</option>
+                          <option value="expense">{t('expenses.expense')}</option>
+                          <option value="income">{t('expenses.income')}</option>
                         </select>
                       </td>
                       {isPro && <td className="px-4 py-2"></td>}
@@ -352,7 +354,7 @@ export default function ExpenseTable() {
                             ? 'bg-accent/20 text-accent'
                             : 'bg-red-500/20 text-red-400'
                         }`}>
-                          {exp.type === 'income' ? 'Ingreso' : 'Gasto'}
+                          {exp.type === 'income' ? t('expenses.income') : t('expenses.expense')}
                         </span>
                       </td>
                       {isPro && (
@@ -385,7 +387,7 @@ export default function ExpenseTable() {
         </div>
         {sorted.length === 0 && (
           <div className="text-center py-12 text-dark-muted">
-            <p>No hay gastos registrados</p>
+            <p>{t('expenses.noExpenses')}</p>
             <p className="text-sm mt-1">Hacé clic en "Agregar" para empezar</p>
           </div>
         )}

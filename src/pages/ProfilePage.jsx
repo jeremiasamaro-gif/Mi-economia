@@ -7,24 +7,26 @@ import MisLogros from '../components/profile/MisLogros'
 import MiGrupo from '../components/profile/MiGrupo'
 import Seguridad from '../components/profile/Seguridad'
 import Integraciones from '../components/profile/Integraciones'
+import { useTranslation } from '../hooks/useTranslation'
 
-const TABS = [
-  { id: 'datos', label: 'Datos Personales', icon: User },
-  { id: 'plan', label: 'Mi Plan', icon: CreditCard },
-  { id: 'logros', label: 'Mis Logros', icon: Trophy },
-  { id: 'grupo', label: 'Mi Grupo', icon: UsersRound },
-  { id: 'integraciones', label: 'Integraciones', icon: Plug },
-  { id: 'seguridad', label: 'Seguridad', icon: ShieldCheck },
+const TAB_KEYS = [
+  { id: 'datos', labelKey: 'profile.datos', icon: User },
+  { id: 'plan', labelKey: 'profile.plan', icon: CreditCard },
+  { id: 'logros', labelKey: 'profile.logros', icon: Trophy },
+  { id: 'grupo', labelKey: 'profile.grupo', icon: UsersRound },
+  { id: 'integraciones', labelKey: 'profile.integraciones', icon: Plug },
+  { id: 'seguridad', labelKey: 'profile.seguridad', icon: ShieldCheck },
 ]
 
 export default function ProfilePage() {
+  const { t } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
   const tabFromUrl = searchParams.get('tab')
   const [activeTab, setActiveTab] = useState(tabFromUrl || 'datos')
   const [unsavedTabs, setUnsavedTabs] = useState(new Set())
 
   useEffect(() => {
-    if (tabFromUrl && TABS.some((t) => t.id === tabFromUrl)) {
+    if (tabFromUrl && TAB_KEYS.some((tab) => tab.id === tabFromUrl)) {
       setActiveTab(tabFromUrl)
     }
   }, [tabFromUrl])
@@ -70,9 +72,9 @@ export default function ProfilePage() {
       {/* Left: Submenu */}
       <div className="w-[220px] shrink-0">
         <div className="bg-dark-surface border border-dark-border rounded-xl p-2 sticky top-6">
-          <h3 className="text-sm font-semibold text-dark-muted px-3 py-2 uppercase tracking-wider">Mi Perfil</h3>
+          <h3 className="text-sm font-semibold text-dark-muted px-3 py-2 uppercase tracking-wider">{t('profile.title')}</h3>
           <nav className="space-y-0.5">
-            {TABS.map(({ id, label, icon: Icon }) => (
+            {TAB_KEYS.map(({ id, labelKey, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => handleTabChange(id)}
@@ -83,7 +85,7 @@ export default function ProfilePage() {
                 }`}
               >
                 <Icon size={18} />
-                <span className="flex-1">{label}</span>
+                <span className="flex-1">{t(labelKey)}</span>
                 {unsavedTabs.has(id) && (
                   <span className="w-2 h-2 rounded-full bg-yellow-400" />
                 )}

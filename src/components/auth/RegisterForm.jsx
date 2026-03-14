@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { useTranslation } from '../../hooks/useTranslation'
 
 export default function RegisterForm({ onRegister, error, loading }) {
+  const { t } = useTranslation()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -26,7 +28,7 @@ export default function RegisterForm({ onRegister, error, loading }) {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-dark-surface border border-dark-border rounded-xl p-6 space-y-4">
-          <h2 className="text-lg font-semibold">Registrarse</h2>
+          <h2 className="text-lg font-semibold">{t('register.title')}</h2>
 
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-3 py-2 rounded-lg">
@@ -35,7 +37,7 @@ export default function RegisterForm({ onRegister, error, loading }) {
           )}
 
           <div>
-            <label className="text-sm text-dark-muted block mb-1">Nombre completo</label>
+            <label className="text-sm text-dark-muted block mb-1">{t('register.fullName')}</label>
             <input
               type="text"
               value={fullName}
@@ -48,7 +50,7 @@ export default function RegisterForm({ onRegister, error, loading }) {
           </div>
 
           <div>
-            <label className="text-sm text-dark-muted block mb-1">Email</label>
+            <label className="text-sm text-dark-muted block mb-1">{t('login.email')}</label>
             <input
               type="email"
               value={email}
@@ -61,7 +63,7 @@ export default function RegisterForm({ onRegister, error, loading }) {
           </div>
 
           <div>
-            <label className="text-sm text-dark-muted block mb-1">Contraseña</label>
+            <label className="text-sm text-dark-muted block mb-1">{t('login.password')}</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -89,13 +91,13 @@ export default function RegisterForm({ onRegister, error, loading }) {
             className="w-full bg-accent text-dark-bg font-semibold py-2.5 rounded-lg hover:bg-accent/90 disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loading && <Loader2 size={16} className="animate-spin" />}
-            Crear cuenta
+            {t('register.submit')}
           </button>
 
           <p className="text-center text-sm text-dark-muted">
-            ¿Ya tenés cuenta?{' '}
+            {t('register.hasAccount')}{' '}
             <Link to="/login" className="text-accent hover:underline">
-              Ingresá
+              {t('register.login')}
             </Link>
           </p>
         </form>

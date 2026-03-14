@@ -1,10 +1,24 @@
 import { X, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from '../../hooks/useTranslation'
 
 export default function UpgradeModal({ isOpen, onClose, feature }) {
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   if (!isOpen) return null
+
+  const benefits = [
+    t('plan.pro.2'),
+    t('plan.pro.3'),
+    t('plan.pro.4'),
+    t('plan.pro.5'),
+    t('plan.pro.6'),
+    t('plan.pro.7'),
+    t('plan.pro.8'),
+    t('plan.pro.9'),
+    t('plan.pro.10'),
+  ]
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -18,7 +32,7 @@ export default function UpgradeModal({ isOpen, onClose, feature }) {
           </button>
         </div>
 
-        <h3 className="text-lg font-bold mb-2">Mejorá a Pro</h3>
+        <h3 className="text-lg font-bold mb-2">{t('plan.upgrade')}</h3>
         <p className="text-dark-muted text-sm mb-4">
           {feature
             ? `La función "${feature}" está disponible en el plan Pro.`
@@ -26,18 +40,7 @@ export default function UpgradeModal({ isOpen, onClose, feature }) {
         </p>
 
         <ul className="space-y-2 mb-6 text-sm">
-          {[
-            'Gastos ilimitados',
-            'Asistente IA con análisis inteligente',
-            'Dashboard completo con gráficos',
-            'Presupuestos por categoría',
-            'Gastos recurrentes automáticos',
-            'Exportar/importar CSV',
-            'Sistema de logros y compartir',
-            'Cuentas grupales (pareja/familia)',
-            'Escáner de tickets con IA',
-            'Bot de WhatsApp',
-          ].map((item) => (
+          {benefits.map((item) => (
             <li key={item} className="flex items-center gap-2 text-dark-text">
               <span className="text-accent">✓</span> {item}
             </li>
@@ -52,13 +55,13 @@ export default function UpgradeModal({ isOpen, onClose, feature }) {
             }}
             className="flex-1 bg-accent text-dark-bg font-semibold py-2.5 rounded-lg hover:bg-accent/90"
           >
-            Ver planes
+            {t('pricing.title')}
           </button>
           <button
             onClick={onClose}
             className="px-4 py-2.5 border border-dark-border rounded-lg text-dark-muted hover:text-dark-text"
           >
-            Ahora no
+            {t('common.close')}
           </button>
         </div>
       </div>

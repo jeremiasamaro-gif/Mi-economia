@@ -4,6 +4,7 @@ import useBudgetStore from '../../store/budgetStore'
 import { useAuth } from '../../hooks/useAuth'
 import { useExpenses } from '../../hooks/useExpenses'
 import { CATEGORIES } from '../../store/mockData'
+import { useTranslation } from '../../hooks/useTranslation'
 
 const formatARS = (n) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
@@ -16,6 +17,7 @@ export default function BudgetManager() {
   const updateBudget = useBudgetStore((s) => s.updateBudget)
   const deleteBudget = useBudgetStore((s) => s.deleteBudget)
 
+  const { t } = useTranslation()
   const [showAdd, setShowAdd] = useState(false)
   const [newBudget, setNewBudget] = useState({ category: 'Alimentación', limit_amount: '' })
 
@@ -45,13 +47,13 @@ export default function BudgetManager() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold">Presupuestos</h2>
+        <h2 className="text-xl font-bold">{t('budgets.title')}</h2>
         {availableCategories.length > 0 && (
           <button
             onClick={() => setShowAdd(!showAdd)}
             className="flex items-center gap-2 bg-accent text-dark-bg px-4 py-2 rounded-lg text-sm font-semibold hover:bg-accent/90"
           >
-            <Plus size={16} /> Agregar
+            <Plus size={16} /> {t('expenses.add')}
           </button>
         )}
       </div>
@@ -59,7 +61,7 @@ export default function BudgetManager() {
       {showAdd && (
         <div className="bg-dark-surface border border-dark-border rounded-xl p-4 mb-4 flex items-end gap-3">
           <div className="flex-1">
-            <label className="text-xs text-dark-muted block mb-1">Categoría</label>
+            <label className="text-xs text-dark-muted block mb-1">{t('expenses.category')}</label>
             <select
               value={newBudget.category}
               onChange={(e) => setNewBudget({ ...newBudget, category: e.target.value })}
@@ -71,7 +73,7 @@ export default function BudgetManager() {
             </select>
           </div>
           <div className="flex-1">
-            <label className="text-xs text-dark-muted block mb-1">Límite mensual</label>
+            <label className="text-xs text-dark-muted block mb-1">{t('budgets.limit')}</label>
             <input
               type="number"
               value={newBudget.limit_amount}
@@ -82,10 +84,10 @@ export default function BudgetManager() {
             />
           </div>
           <button onClick={handleAdd} className="bg-accent text-dark-bg px-4 py-2 rounded-lg text-sm font-semibold hover:bg-accent/90">
-            Guardar
+            {t('expenses.save')}
           </button>
           <button onClick={() => setShowAdd(false)} className="text-dark-muted hover:text-dark-text text-sm px-2 py-2">
-            Cancelar
+            {t('expenses.cancel')}
           </button>
         </div>
       )}
@@ -125,7 +127,7 @@ export default function BudgetManager() {
                   {pct.toFixed(0)}% usado
                 </span>
                 <span className="text-xs text-dark-muted font-mono">
-                  Restante: {formatARS(Math.max(0, budget.limit_amount - spent))}
+                  {t('budgets.remaining')}: {formatARS(Math.max(0, budget.limit_amount - spent))}
                 </span>
               </div>
             </div>
@@ -134,7 +136,7 @@ export default function BudgetManager() {
 
         {budgets.length === 0 && (
           <div className="text-center py-12 text-dark-muted bg-dark-surface border border-dark-border rounded-xl">
-            <p>No tenés presupuestos configurados</p>
+            <p>{t('budgets.noBudgets')}</p>
             <p className="text-sm mt-1">Agregá límites por categoría para controlar tus gastos</p>
           </div>
         )}

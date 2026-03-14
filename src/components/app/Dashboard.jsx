@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, Cart
 import { useExpenses } from '../../hooks/useExpenses'
 import { usePlan } from '../../hooks/usePlan'
 import { useGroup } from '../../hooks/useGroup'
+import { useTranslation } from '../../hooks/useTranslation'
 import UpgradeModal from '../shared/UpgradeModal'
 import GroupDashboard from './GroupDashboard'
 
@@ -22,6 +23,7 @@ export default function Dashboard() {
   const { expenses, currentMonthExpenses, monthlyTotals, categoryTotals } = useExpenses()
   const { canUseCharts } = usePlan()
   const { group } = useGroup()
+  const { t } = useTranslation()
   const [showUpgrade, setShowUpgrade] = useState(false)
 
   const now = new Date()
@@ -59,10 +61,10 @@ export default function Dashboard() {
   const savings = Math.max(0, totalIncome - projectedTotalExpenses)
 
   const cards = [
-    { label: 'Ingresos del mes', value: totalIncome, icon: TrendingUp, color: 'text-accent' },
-    { label: 'Gastos del mes', value: totalExpense, icon: TrendingDown, color: 'text-red-400' },
-    { label: 'Balance', value: balance, icon: DollarSign, color: balance >= 0 ? 'text-accent' : 'text-red-400' },
-    { label: 'Ahorro potencial', value: savings, icon: PiggyBank, color: 'text-blue-400', subtitle: daysRemaining > 0 ? `Faltan ~${formatARS(projectedRemainingExpenses)} en ${daysRemaining} días` : null },
+    { label: t('dashboard.monthlyIncome'), value: totalIncome, icon: TrendingUp, color: 'text-accent' },
+    { label: t('dashboard.monthlyExpenses'), value: totalExpense, icon: TrendingDown, color: 'text-red-400' },
+    { label: t('dashboard.netBalance'), value: balance, icon: DollarSign, color: balance >= 0 ? 'text-accent' : 'text-red-400' },
+    { label: t('dashboard.savings'), value: savings, icon: PiggyBank, color: 'text-blue-400', subtitle: daysRemaining > 0 ? `Faltan ~${formatARS(projectedRemainingExpenses)} en ${daysRemaining} días` : null },
   ]
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -81,7 +83,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-6">Dashboard</h2>
+      <h2 className="text-xl font-bold mb-6">{t('dashboard.title')}</h2>
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -102,7 +104,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Category donut */}
           <div className="bg-dark-surface border border-dark-border rounded-xl p-5">
-            <h3 className="text-sm font-semibold mb-4">Gastos por categoría</h3>
+            <h3 className="text-sm font-semibold mb-4">{t('dashboard.byCategory')}</h3>
             {categoryTotals.length > 0 ? (
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
@@ -127,14 +129,14 @@ export default function Dashboard() {
               </ResponsiveContainer>
             ) : (
               <div className="h-[280px] flex items-center justify-center text-dark-muted text-sm">
-                Sin datos este mes
+                {t('dashboard.noData')}
               </div>
             )}
           </div>
 
           {/* Monthly line chart */}
           <div className="bg-dark-surface border border-dark-border rounded-xl p-5">
-            <h3 className="text-sm font-semibold mb-4">Evolución (6 meses)</h3>
+            <h3 className="text-sm font-semibold mb-4">{t('dashboard.last6months')}</h3>
             <ResponsiveContainer width="100%" height={280}>
               <LineChart data={monthlyTotals}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#2a2d35" />
@@ -142,15 +144,15 @@ export default function Dashboard() {
                 <YAxis tickFormatter={formatShort} tick={{ fill: '#71717a', fontSize: 12 }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend formatter={(v) => <span className="text-xs text-dark-muted">{v}</span>} />
-                <Line type="monotone" dataKey="income" name="Ingresos" stroke="#4ade80" strokeWidth={2} dot={{ r: 4 }} />
-                <Line type="monotone" dataKey="expense" name="Gastos" stroke="#ef4444" strokeWidth={2} dot={{ r: 4 }} />
+                <Line type="monotone" dataKey="income" name={t('expenses.income')} stroke="#4ade80" strokeWidth={2} dot={{ r: 4 }} />
+                <Line type="monotone" dataKey="expense" name={t('expenses.expense')} stroke="#ef4444" strokeWidth={2} dot={{ r: 4 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
           {/* Bar chart income vs expense */}
           <div className="bg-dark-surface border border-dark-border rounded-xl p-5 lg:col-span-2">
-            <h3 className="text-sm font-semibold mb-4">Ingresos vs Gastos</h3>
+            <h3 className="text-sm font-semibold mb-4">{`${t('expenses.income')} vs ${t('expenses.expense')}`}</h3>
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={monthlyTotals}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#2a2d35" />
@@ -158,8 +160,8 @@ export default function Dashboard() {
                 <YAxis tickFormatter={formatShort} tick={{ fill: '#71717a', fontSize: 12 }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend formatter={(v) => <span className="text-xs text-dark-muted">{v}</span>} />
-                <Bar dataKey="income" name="Ingresos" fill="#4ade80" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="expense" name="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="income" name={t('expenses.income')} fill="#4ade80" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="expense" name={t('expenses.expense')} fill="#ef4444" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

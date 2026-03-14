@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom'
 import { LayoutDashboard, Receipt, PiggyBank, RefreshCw, Shield } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import useAdminStore from '../../store/adminStore'
+import { useTranslation } from '../../hooks/useTranslation'
 import PlanBadge from './PlanBadge'
 
 // Inline SVG briefcase/suit icon for CFO
@@ -15,15 +16,16 @@ const CfoIcon = () => (
   </svg>
 )
 
-const navItems = [
-  { to: '/app', icon: LayoutDashboard, label: 'Dashboard', featureKey: 'dashboard' },
-  { to: '/app/expenses', icon: Receipt, label: 'Gastos', featureKey: 'expenses' },
-  { to: '/app/budgets', icon: PiggyBank, label: 'Presupuestos', pro: true, featureKey: 'budgets' },
-  { to: '/app/recurring', icon: RefreshCw, label: 'Recurrentes', pro: true, featureKey: 'recurring' },
+const NAV_KEYS = [
+  { to: '/app', icon: LayoutDashboard, labelKey: 'nav.dashboard', featureKey: 'dashboard' },
+  { to: '/app/expenses', icon: Receipt, labelKey: 'nav.expenses', featureKey: 'expenses' },
+  { to: '/app/budgets', icon: PiggyBank, labelKey: 'nav.budgets', pro: true, featureKey: 'budgets' },
+  { to: '/app/recurring', icon: RefreshCw, labelKey: 'nav.recurring', pro: true, featureKey: 'recurring' },
 ]
 
 export default function Sidebar() {
   const { user, logout, isAdmin, isPro, isTrial, trialDaysLeft } = useAuth()
+  const { t } = useTranslation()
   const getUserFeatures = useAdminStore((s) => s.getUserFeatures)
   const userFeatures = user ? getUserFeatures(user.id, user.plan) : {}
   const [showPulse, setShowPulse] = useState(false)
@@ -54,7 +56,7 @@ export default function Sidebar() {
       <nav className="flex-1 p-3 overflow-y-auto">
         {/* Main nav items */}
         <div className="space-y-1">
-          {navItems.map(({ to, icon: Icon, label, pro, featureKey }) => {
+          {NAV_KEYS.map(({ to, icon: Icon, labelKey, pro, featureKey }) => {
             if (featureKey && userFeatures[featureKey] === false) return null
             const enabledByOverride = featureKey && userFeatures[featureKey] === true
             const isLocked = pro && !isPro && !enabledByOverride
@@ -72,7 +74,7 @@ export default function Sidebar() {
                 }
               >
                 <Icon size={18} />
-                <span>{label}</span>
+                <span>{t(labelKey)}</span>
                 {isLocked && (
                   <span className="ml-auto text-[10px] bg-accent/20 text-accent px-1.5 py-0.5 rounded">PRO</span>
                 )}
@@ -84,26 +86,26 @@ export default function Sidebar() {
         {/* Herramientas IA section */}
         <div className="mt-5">
           <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-gray-600">
-            Herramientas IA
+            {t('nav.aiTools')}
           </p>
 
-          {/* Mi CFO Personal — featured entry */}
+          {/* Asistente Financiero */}
           <NavLink
             to="/app/cfo"
             className={({ isActive }) =>
-              `group relative flex items-start gap-3 px-3 py-3 rounded-lg text-sm transition-all border-l-[3px] ${
+              `group relative flex items-start gap-3 px-3 py-3 rounded-lg text-sm transition-all ${
                 isActive
-                  ? 'border-accent bg-[#1e2a1e] text-accent'
-                  : 'border-accent/60 bg-[#1e2a1e]/70 text-accent/90 hover:border-accent hover:bg-[#1e2a1e]'
+                  ? 'bg-accent/10 text-accent'
+                  : 'text-dark-muted hover:text-dark-text hover:bg-dark-hover'
               } ${showPulse ? 'animate-cfo-pulse' : ''}`
             }
           >
-            <div className="mt-0.5 text-accent">
+            <div className="mt-0.5">
               <CfoIcon />
             </div>
             <div className="flex-1 min-w-0">
-              <span className="font-medium block">Mi CFO Personal</span>
-              <span className="text-[10px] text-accent/60 block mt-0.5">¿Puedo comprar esto?</span>
+              <span className="font-medium block">{t('nav.cfo')}</span>
+              <span className="text-[10px] text-dark-muted block mt-0.5">{t('nav.cfo.subtitle')}</span>
             </div>
           </NavLink>
         </div>
@@ -123,7 +125,7 @@ export default function Sidebar() {
               }
             >
               <Shield size={18} />
-              <span>Admin</span>
+              <span>{t('nav.admin')}</span>
             </NavLink>
           </div>
         )}

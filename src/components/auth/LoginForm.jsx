@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { useTranslation } from '../../hooks/useTranslation'
 
 export default function LoginForm({ onLogin, error, loading }) {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -24,7 +26,7 @@ export default function LoginForm({ onLogin, error, loading }) {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-dark-surface border border-dark-border rounded-xl p-6 space-y-4">
-          <h2 className="text-lg font-semibold">Iniciar sesión</h2>
+          <h2 className="text-lg font-semibold">{t('login.title')}</h2>
 
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-3 py-2 rounded-lg">
@@ -33,7 +35,7 @@ export default function LoginForm({ onLogin, error, loading }) {
           )}
 
           <div>
-            <label className="text-sm text-dark-muted block mb-1">Email</label>
+            <label className="text-sm text-dark-muted block mb-1">{t('login.email')}</label>
             <input
               type="email"
               value={email}
@@ -46,7 +48,7 @@ export default function LoginForm({ onLogin, error, loading }) {
           </div>
 
           <div>
-            <label className="text-sm text-dark-muted block mb-1">Contraseña</label>
+            <label className="text-sm text-dark-muted block mb-1">{t('login.password')}</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -73,17 +75,17 @@ export default function LoginForm({ onLogin, error, loading }) {
             className="w-full bg-accent text-dark-bg font-semibold py-2.5 rounded-lg hover:bg-accent/90 disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loading && <Loader2 size={16} className="animate-spin" />}
-            Ingresar
+            {t('login.submit')}
           </button>
 
           <div className="text-center text-sm text-dark-muted space-y-2">
             <Link to="/forgot-password" className="block hover:text-accent">
-              ¿Olvidaste tu contraseña?
+              {t('login.forgotPassword')}
             </Link>
             <p>
-              ¿No tenés cuenta?{' '}
+              {t('login.noAccount')}{' '}
               <Link to="/register" className="text-accent hover:underline">
-                Registrate
+                {t('login.register')}
               </Link>
             </p>
           </div>
@@ -96,7 +98,7 @@ export default function LoginForm({ onLogin, error, loading }) {
               <p><span className="text-dark-muted">Free:</span> demo-free@mieconomia.com</p>
               <p className="text-dark-muted">(cualquier contraseña)</p>
             </div>
-            <p className="text-xs text-dark-muted text-center mt-2">O <Link to="/register" className="text-accent hover:underline">creá tu propia cuenta</Link> para cargar tus gastos</p>
+            <p className="text-xs text-dark-muted text-center mt-2">O <Link to="/register" className="text-accent hover:underline">{t('login.register').toLowerCase()}</Link> para cargar tus gastos</p>
           </div>
         </form>
       </div>

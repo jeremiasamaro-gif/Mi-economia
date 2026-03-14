@@ -3,10 +3,30 @@ import { useNavigate } from 'react-router-dom'
 import { Bell, User, LogOut } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import useProfileStore from '../../store/profileStore'
+import { useTranslation } from '../../hooks/useTranslation'
+
+// Compact flag SVGs
+const FlagES = () => (
+  <svg width="20" height="14" viewBox="0 0 20 14" xmlns="http://www.w3.org/2000/svg" className="rounded-sm">
+    <rect width="20" height="14" fill="#c60b1e" />
+    <rect y="3.5" width="20" height="7" fill="#ffc400" />
+  </svg>
+)
+
+const FlagEN = () => (
+  <svg width="20" height="14" viewBox="0 0 20 14" xmlns="http://www.w3.org/2000/svg" className="rounded-sm">
+    <rect width="20" height="14" fill="#012169" />
+    <path d="M0 0L20 14M20 0L0 14" stroke="#fff" strokeWidth="2.5" />
+    <path d="M0 0L20 14M20 0L0 14" stroke="#c8102e" strokeWidth="1.5" />
+    <path d="M10 0V14M0 7H20" stroke="#fff" strokeWidth="4" />
+    <path d="M10 0V14M0 7H20" stroke="#c8102e" strokeWidth="2.5" />
+  </svg>
+)
 
 export default function TopBar() {
   const { user, logout } = useAuth()
   const { profile } = useProfileStore()
+  const { t, lang, setLang } = useTranslation()
   const navigate = useNavigate()
   const [showMenu, setShowMenu] = useState(false)
   const menuRef = useRef(null)
@@ -30,14 +50,41 @@ export default function TopBar() {
 
   return (
     <div className="flex items-center justify-end gap-3 mb-6">
+      {/* Language switcher */}
+      <div className="flex items-center bg-dark-surface border border-dark-border rounded-lg overflow-hidden">
+        <button
+          onClick={() => setLang('es')}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium transition-colors ${
+            lang === 'es'
+              ? 'bg-accent/15 text-accent'
+              : 'text-dark-muted hover:text-dark-text hover:bg-dark-hover'
+          }`}
+          title="Español"
+        >
+          <FlagES />
+          <span>ES</span>
+        </button>
+        <div className="w-px h-5 bg-dark-border" />
+        <button
+          onClick={() => setLang('en')}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium transition-colors ${
+            lang === 'en'
+              ? 'bg-accent/15 text-accent'
+              : 'text-dark-muted hover:text-dark-text hover:bg-dark-hover'
+          }`}
+          title="English"
+        >
+          <FlagEN />
+          <span>EN</span>
+        </button>
+      </div>
+
       {/* Notifications bell (placeholder for future) */}
       <button
         className="relative w-9 h-9 rounded-lg bg-dark-surface border border-dark-border flex items-center justify-center text-dark-muted hover:text-dark-text hover:bg-dark-hover transition-colors"
-        title="Notificaciones (próximamente)"
+        title={t('nav.notifications')}
       >
         <Bell size={18} />
-        {/* Notification dot — uncomment when notifications are active */}
-        {/* <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent" /> */}
       </button>
 
       {/* Avatar dropdown */}
@@ -69,7 +116,7 @@ export default function TopBar() {
               className="flex items-center gap-2 px-3 py-2.5 w-full text-sm text-dark-muted hover:text-dark-text hover:bg-dark-hover transition-colors"
             >
               <User size={16} />
-              Mi Perfil
+              {t('nav.profile')}
             </button>
             <div className="border-t border-dark-border" />
             <button
@@ -77,7 +124,7 @@ export default function TopBar() {
               className="flex items-center gap-2 px-3 py-2.5 w-full text-sm text-dark-muted hover:text-red-400 hover:bg-dark-hover transition-colors"
             >
               <LogOut size={16} />
-              Cerrar sesión
+              {t('nav.logout')}
             </button>
           </div>
         )}
