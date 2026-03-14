@@ -7,6 +7,7 @@ import { useGroup } from '../../hooks/useGroup'
 import { useTranslation } from '../../hooks/useTranslation'
 import UpgradeModal from '../shared/UpgradeModal'
 import GroupDashboard from './GroupDashboard'
+import EstadoResultados from './EstadoResultados'
 
 const COLORS = ['#4ade80', '#f97316', '#3b82f6', '#a855f7', '#ef4444', '#eab308', '#06b6d4', '#ec4899', '#84cc16', '#6366f1']
 
@@ -98,6 +99,9 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+
+      {/* P&L Statement */}
+      <EstadoResultados />
 
       {/* Charts - Pro only */}
       {canUseCharts ? (
