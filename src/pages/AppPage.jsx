@@ -7,6 +7,7 @@ import RecurringExpenses from '../components/app/RecurringExpenses'
 import Achievements from '../components/app/Achievements'
 import GroupSettings from '../components/app/GroupSettings'
 import WhatsAppSettings from '../components/app/WhatsAppSettings'
+import ProfilePage from './ProfilePage'
 import AIChat from '../components/app/AIChat'
 import { usePlan } from '../hooks/usePlan'
 
@@ -40,6 +41,7 @@ export default function AppPage() {
             path="whatsapp"
             element={canUseWhatsApp ? <WhatsAppSettings /> : <Navigate to="/pricing" replace />}
           />
+          <Route path="perfil" element={<ProfilePage />} />
         </Routes>
       </main>
       <AIChat />
