@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { User, CreditCard, Trophy, UsersRound, ShieldCheck } from 'lucide-react'
+import { User, CreditCard, Trophy, UsersRound, ShieldCheck, Plug } from 'lucide-react'
 import DatosPersonales from '../components/profile/DatosPersonales'
 import MiPlan from '../components/profile/MiPlan'
 import MisLogros from '../components/profile/MisLogros'
 import MiGrupo from '../components/profile/MiGrupo'
 import Seguridad from '../components/profile/Seguridad'
+import Integraciones from '../components/profile/Integraciones'
 
 const TABS = [
   { id: 'datos', label: 'Datos Personales', icon: User },
   { id: 'plan', label: 'Mi Plan', icon: CreditCard },
   { id: 'logros', label: 'Mis Logros', icon: Trophy },
   { id: 'grupo', label: 'Mi Grupo', icon: UsersRound },
+  { id: 'integraciones', label: 'Integraciones', icon: Plug },
   { id: 'seguridad', label: 'Seguridad', icon: ShieldCheck },
 ]
 
@@ -54,6 +56,8 @@ export default function ProfilePage() {
         return <MisLogros />
       case 'grupo':
         return <MiGrupo />
+      case 'integraciones':
+        return <Integraciones />
       case 'seguridad':
         return <Seguridad />
       default:
