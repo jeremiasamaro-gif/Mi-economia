@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Receipt, PiggyBank, RefreshCw, CreditCard, Shield, LogOut, Trophy, UsersRound, Smartphone } from 'lucide-react'
+import { LayoutDashboard, Receipt, PiggyBank, RefreshCw, Shield } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import useAdminStore from '../../store/adminStore'
 import PlanBadge from './PlanBadge'
@@ -9,10 +9,6 @@ const navItems = [
   { to: '/app/expenses', icon: Receipt, label: 'Gastos', featureKey: 'expenses' },
   { to: '/app/budgets', icon: PiggyBank, label: 'Presupuestos', pro: true, featureKey: 'budgets' },
   { to: '/app/recurring', icon: RefreshCw, label: 'Recurrentes', pro: true, featureKey: 'recurring' },
-  { to: '/app/achievements', icon: Trophy, label: 'Logros', pro: true, featureKey: 'achievements' },
-  { to: '/app/group', icon: UsersRound, label: 'Grupo', pro: true, featureKey: 'groups' },
-  { to: '/app/whatsapp', icon: Smartphone, label: 'WhatsApp', pro: true, featureKey: 'whatsapp' },
-  { to: '/pricing', icon: CreditCard, label: 'Planes' },
 ]
 
 export default function Sidebar() {
