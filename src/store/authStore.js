@@ -67,7 +67,7 @@ const useAuthStore = create((set, get) => ({
 
     // New users get 10-day Pro trial
     const trialEnd = new Date()
-    trialEnd.setDate(trialEnd.getDate() + 10)
+    trialEnd.setDate(trialEnd.getDate() + 7)
 
     const newUser = {
       id: `user-${Date.now()}`,

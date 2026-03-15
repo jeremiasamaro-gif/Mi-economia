@@ -12,6 +12,7 @@ import ProfilePage from './ProfilePage'
 import CfoPage from '../components/app/CfoPage'
 import AIChat from '../components/app/AIChat'
 import { usePlan } from '../hooks/usePlan'
+import TrialBanner from '../components/shared/TrialBanner'
 
 export default function AppPage() {
   const { canUseBudgets, canUseRecurring, canUseAchievements, canUseGroups, canUseWhatsApp } = usePlan()
@@ -20,6 +21,7 @@ export default function AppPage() {
     <div className="flex min-h-screen bg-dark-bg">
       <Sidebar />
       <main className="flex-1 ml-[220px] p-6 max-w-[1200px]">
+        <TrialBanner />
         <TopBar />
         <Routes>
           <Route index element={<Dashboard />} />
