@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Check, X } from 'lucide-react'
 import { useTranslation } from '../../hooks/useTranslation'
 
@@ -22,6 +23,7 @@ const PRO_FEATURES = [
 
 export default function PricingSection() {
   const { t } = useTranslation()
+  const [isAnnual, setIsAnnual] = useState(false)
 
   const scrollToRegister = () => {
     const el = document.querySelector('#hero')
@@ -31,9 +33,31 @@ export default function PricingSection() {
   return (
     <section id="pricing" className="py-20 sm:py-24 px-4 sm:px-6 scroll-mt-16">
       <div className="max-w-4xl mx-auto">
-        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-dark-text text-center mb-12">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-dark-text text-center mb-8">
           {t('landing.pricing.title')}
         </h2>
+
+        {/* Billing toggle */}
+        <div className="flex justify-center mb-10">
+          <div className="inline-flex items-center bg-dark-surface border border-dark-border rounded-lg p-1">
+            <button
+              onClick={() => setIsAnnual(false)}
+              className={`px-4 py-1.5 text-xs rounded-md transition-colors ${
+                !isAnnual ? 'bg-[#1e2128] border border-[#3a3d45] text-[#e2e4e9]' : 'border border-transparent text-[#6b7280]'
+              }`}
+            >
+              {t('landing.pricing.monthly')}
+            </button>
+            <button
+              onClick={() => setIsAnnual(true)}
+              className={`px-4 py-1.5 text-xs rounded-md transition-colors ${
+                isAnnual ? 'bg-[#1e2128] border border-[#3a3d45] text-[#e2e4e9]' : 'border border-transparent text-[#6b7280]'
+              }`}
+            >
+              {t('landing.pricing.annual')}
+            </button>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Free */}
@@ -42,6 +66,12 @@ export default function PricingSection() {
               <span className="text-xs text-dark-muted uppercase tracking-wider">{t('landing.pricing.free')}</span>
               <div className="mt-2 flex items-baseline gap-1">
                 <span className="text-3xl font-bold text-dark-text">$0</span>
+                <span className="text-sm text-dark-muted">{t('landing.pricing.perMonth')}</span>
+              </div>
+              <div className="mt-2">
+                <span className="text-[11px] bg-[#2a2a1e] text-[#fbbf24] px-2.5 py-1 rounded-md">
+                  {t('landing.pricing.freeLimit')}
+                </span>
               </div>
             </div>
 
@@ -79,10 +109,25 @@ export default function PricingSection() {
             <div className="mb-5">
               <span className="text-xs text-accent uppercase tracking-wider">Pro</span>
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-dark-text">$2.999</span>
-                <span className="text-sm text-dark-muted">ARS / mes</span>
+                <span className="text-3xl font-bold text-dark-text">
+                  {isAnnual ? '$65.000' : '$7.500'}
+                </span>
+                <span className="text-xs text-dark-muted">ARS</span>
+                <span className="text-sm text-dark-muted">
+                  {isAnnual ? t('landing.pricing.perYear') : t('landing.pricing.perMonth')}
+                </span>
               </div>
-              <p className="text-[10px] text-dark-muted mt-1">{t('landing.pricing.tryFree')}</p>
+              {isAnnual ? (
+                <div className="mt-2 space-y-1.5">
+                  <p className="text-xs text-dark-muted">{t('landing.pricing.monthlyEquiv')}</p>
+                  <span className="inline-block text-xs bg-[#1e3a2a] text-[#4ade80] px-3 py-1 rounded-md font-medium">
+                    {t('landing.pricing.saveBadge')}
+                  </span>
+                  <p className="text-[10px] text-dark-muted">{t('landing.pricing.annualTotal')}</p>
+                </div>
+              ) : (
+                <p className="text-[10px] text-dark-muted mt-1">{t('landing.pricing.tryFree')}</p>
+              )}
             </div>
 
             <ul className="space-y-2.5 flex-1 mb-6">

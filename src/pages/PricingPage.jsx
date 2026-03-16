@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Check, X, ArrowLeft } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
@@ -7,6 +8,7 @@ export default function PricingPage() {
   const { user } = useAuth()
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const [isAnnual, setIsAnnual] = useState(false)
 
   const features = [
     { name: t('plan.free.1'), free: t('plan.free.1'), pro: t('plan.pro.2') },
@@ -23,6 +25,7 @@ export default function PricingPage() {
 
   const handleSubscribe = () => {
     // TODO MP: replace with MercadoPago Checkout Pro API call
+    // Will generate monthly ($7.500) or annual ($65.000) preference based on isAnnual
     alert('MercadoPago: Se generará un link de pago cuando se configure la integración.')
   }
 
@@ -44,11 +47,33 @@ export default function PricingPage() {
           </button>
         )}
 
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2">
             mi Econom<span className="text-accent">IA</span>
           </h1>
           <p className="text-dark-muted">{t('pricing.title')}</p>
+        </div>
+
+        {/* Billing toggle */}
+        <div className="flex justify-center mb-10">
+          <div className="inline-flex items-center bg-dark-surface border border-dark-border rounded-lg p-1">
+            <button
+              onClick={() => setIsAnnual(false)}
+              className={`px-4 py-1.5 text-xs rounded-md transition-colors ${
+                !isAnnual ? 'bg-[#1e2128] border border-[#3a3d45] text-[#e2e4e9]' : 'border border-transparent text-[#6b7280]'
+              }`}
+            >
+              {t('landing.pricing.monthly')}
+            </button>
+            <button
+              onClick={() => setIsAnnual(true)}
+              className={`px-4 py-1.5 text-xs rounded-md transition-colors ${
+                isAnnual ? 'bg-[#1e2128] border border-[#3a3d45] text-[#e2e4e9]' : 'border border-transparent text-[#6b7280]'
+              }`}
+            >
+              {t('landing.pricing.annual')}
+            </button>
+          </div>
         </div>
 
         {/* Plans */}
@@ -64,9 +89,13 @@ export default function PricingPage() {
             )}
             <h3 className="text-xl font-bold mb-1">{t('plan.free')}</h3>
             <p className="text-3xl font-bold font-mono mb-1">
-              $0 <span className="text-sm font-normal text-dark-muted">/mes</span>
+              $0 <span className="text-sm font-normal text-dark-muted">{t('landing.pricing.perMonth')}</span>
             </p>
-            <p className="text-sm text-dark-muted mb-6">{t('plan.freeForever')}</p>
+            <div className="mb-6">
+              <span className="text-[11px] bg-[#2a2a1e] text-[#fbbf24] px-2.5 py-1 rounded-md">
+                {t('landing.pricing.freeLimit')}
+              </span>
+            </div>
 
             {!user ? (
               <button
@@ -96,10 +125,23 @@ export default function PricingPage() {
             )}
             <h3 className="text-xl font-bold mb-1">{t('plan.pro')}</h3>
             <p className="text-3xl font-bold font-mono mb-1">
-              <span className="text-accent">$2.999</span>{' '}
-              <span className="text-sm font-normal text-dark-muted">/mes</span>
+              <span className="text-accent">{isAnnual ? '$65.000' : '$7.500'}</span>{' '}
+              <span className="text-xs font-normal text-dark-muted">ARS</span>{' '}
+              <span className="text-sm font-normal text-dark-muted">
+                {isAnnual ? t('landing.pricing.perYear') : t('landing.pricing.perMonth')}
+              </span>
             </p>
-            <p className="text-sm text-dark-muted mb-6">{t('plan.pricePerMonth')}</p>
+            {isAnnual ? (
+              <div className="mb-6 space-y-1.5">
+                <p className="text-xs text-dark-muted">{t('landing.pricing.monthlyEquiv')}</p>
+                <span className="inline-block text-xs bg-[#1e3a2a] text-[#4ade80] px-3 py-1 rounded-md font-medium">
+                  {t('landing.pricing.saveBadge')}
+                </span>
+                <p className="text-[10px] text-dark-muted">{t('landing.pricing.annualTotal')}</p>
+              </div>
+            ) : (
+              <p className="text-sm text-dark-muted mb-6">{t('plan.pricePerMonth')}</p>
+            )}
 
             {user?.plan === 'pro' ? (
               <button disabled className="w-full border border-accent text-accent py-2.5 rounded-lg cursor-default">
