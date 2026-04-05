@@ -5,7 +5,7 @@ import { CATEGORIES } from '../../store/mockData'
 const formatARS = (n) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
 
-export default function TicketConfirmModal({ result, onConfirm, onCancel }) {
+export default function TicketConfirmModal({ result, warnings = [], onConfirm, onCancel }) {
   const businessFound = result.businessFound !== false
   const [data, setData] = useState({
     description: result.store || '',
@@ -64,6 +64,21 @@ export default function TicketConfirmModal({ result, onConfirm, onCancel }) {
                   No reconocimos "{result.razonSocial}". Revisá la descripción y elegí la categoría a mano.
                 </p>
               </div>
+            </div>
+          )}
+
+          {/* Validation warnings from ticketValidation layer */}
+          {warnings.length > 0 && (
+            <div className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 text-xs px-3 py-2.5 rounded-lg space-y-1">
+              <div className="flex items-center gap-1.5 font-medium">
+                <AlertTriangle size={13} className="shrink-0" />
+                Revisá antes de guardar:
+              </div>
+              <ul className="list-disc list-inside text-yellow-300/80 space-y-0.5 pl-1">
+                {warnings.map((w, i) => (
+                  <li key={i}>{w}</li>
+                ))}
+              </ul>
             </div>
           )}
 

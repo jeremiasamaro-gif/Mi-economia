@@ -10,7 +10,7 @@ import GroupSettings from '../components/app/GroupSettings'
 import WhatsAppSettings from '../components/app/WhatsAppSettings'
 import ProfilePage from './ProfilePage'
 import CfoPage from '../components/app/CfoPage'
-import AIChat from '../components/app/AIChat'
+import SupportButton from '../components/support/SupportButton'
 import { usePlan } from '../hooks/usePlan'
 import TrialBanner from '../components/shared/TrialBanner'
 
@@ -48,9 +48,10 @@ export default function AppPage() {
           />
           <Route path="perfil" element={<ProfilePage />} />
           <Route path="cfo" element={<CfoPage />} />
+          <Route path="*" element={<Navigate to="/app" replace />} />
         </Routes>
       </main>
-      <AIChat />
+      <SupportButton />
     </div>
   )
 }

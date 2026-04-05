@@ -1,30 +1,46 @@
 import { useAuth } from './useAuth'
-import { PLAN_LIMITS } from '../store/mockData'
+import { resolveCapabilities } from '../core/constants'
 import useAdminStore from '../store/adminStore'
 
+/**
+ * usePlan — resolves the current user's capabilities.
+ *
+ * Uses the centralized PLAN_PERMISSIONS from core/constants.js
+ * merged with admin feature overrides from adminStore.
+ *
+ * Components should ask: capabilities.canUseOCR
+ * NOT: plan === 'pro'
+ *
+ * SECURITY: These are client-side checks for UI gating only.
+ * Server-side RLS + Edge Functions enforce the real limits.
+ */
 export function usePlan() {
   const { user, isPro } = useAuth()
   const plan = user?.plan || 'free'
-  const limits = PLAN_LIMITS[plan]
+  const role = user?.role || 'user'
   const getUserFeatures = useAdminStore((s) => s.getUserFeatures)
-  const features = user ? getUserFeatures(user.id, user.plan) : {}
+  const adminOverrides = user ? getUserFeatures(user.id, user.plan) : {}
 
-  // Admin overrides can grant pro features to free users
+  // Resolve all capabilities from centralized permissions + admin overrides
+  const capabilities = resolveCapabilities(plan, role, adminOverrides)
+
+  // Return capabilities with backward-compatible names
   return {
     plan,
     isPro,
-    limits,
-    canUseAI: limits.hasAI || features.ai_chat === true,
-    canUseRecurring: limits.hasRecurring || features.recurring === true,
-    canUseCharts: limits.hasCharts || features.dashboard === true,
-    canUseBudgets: limits.hasBudgets || features.budgets === true,
-    canUseTags: limits.hasTags,
-    canUseSplitting: limits.hasSplitting,
-    canUseCsvExport: limits.hasCsvExport,
-    canUseAchievements: limits.hasAchievements || features.achievements === true,
-    canUseGroups: limits.hasGroups || features.groups === true,
-    canUseScanner: limits.hasScanner || features.scanner === true,
-    canUseWhatsApp: limits.hasWhatsApp || features.whatsapp === true,
-    maxExpenses: limits.maxExpensesPerMonth,
+    capabilities,
+    // Backward-compatible aliases (used by existing components)
+    canUseRecurring: capabilities.canUseRecurring,
+    canUseCharts: capabilities.canUseCharts,
+    canUseBudgets: capabilities.canUseBudgets,
+    canUseTags: capabilities.canUseTags,
+    canUseSplitting: capabilities.canUseSplitting,
+    canUseCsvExport: capabilities.canUseCsvExport,
+    canUseAchievements: capabilities.canUseAchievements,
+    canUseGroups: capabilities.canUseGroups,
+    canUseScanner: capabilities.canUseOCR,
+    canUseWhatsApp: capabilities.canUseWhatsApp,
+    canAccessAdmin: capabilities.canAccessAdmin,
+    maxExpenses: capabilities.maxExpensesPerMonth,
   }
 }

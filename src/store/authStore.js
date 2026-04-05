@@ -53,7 +53,7 @@ const useAuthStore = create((set, get) => ({
     return false
   },
 
-  register: (email, password, fullName) => {
+  register: (email, password, fullName, phone = null) => {
     set({ loading: true, error: null })
     // TODO SUPABASE: replace with supabase.auth.signUp({ email, password, options: { data: { full_name: fullName } } })
 
@@ -65,7 +65,8 @@ const useAuthStore = create((set, get) => ({
       return false
     }
 
-    // New users get 10-day Pro trial
+    // New users get 7-day Pro trial (mirrors DB trigger handle_new_user_trial)
+    const trialStart = new Date()
     const trialEnd = new Date()
     trialEnd.setDate(trialEnd.getDate() + 7)
 
@@ -73,11 +74,13 @@ const useAuthStore = create((set, get) => ({
       id: `user-${Date.now()}`,
       email,
       full_name: fullName,
+      phone,
       password,
-      plan: 'pro',
+      plan: 'free',               // Base plan is free (trial grants pro access)
       role: 'user',
       mp_payment_id: null,
       subscription_status: 'trial',
+      trial_start: trialStart.toISOString(),
       trial_ends_at: trialEnd.toISOString(),
       created_at: new Date().toISOString(),
     }
@@ -94,7 +97,16 @@ const useAuthStore = create((set, get) => ({
   clearError: () => set({ error: null }),
 
   isAdmin: () => get().user?.role === 'admin',
-  isPro: () => get().user?.plan === 'pro',
+  // Pro = paid pro OR active trial (mirrors server-side get_effective_plan)
+  isPro: () => {
+    const user = get().user
+    if (!user) return false
+    if (user.plan === 'pro' && user.subscription_status === 'active') return true
+    if (user.subscription_status === 'trial' && user.trial_ends_at) {
+      return new Date(user.trial_ends_at) > new Date()
+    }
+    return false
+  },
 
   // Trial helpers
   isTrial: () => get().user?.subscription_status === 'trial',

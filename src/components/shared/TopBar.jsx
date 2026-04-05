@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Bell, User, LogOut } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import useProfileStore from '../../store/profileStore'
+import useSupportStore from '../../store/supportStore'
 import { useTranslation } from '../../hooks/useTranslation'
 
 // Compact flag SVGs
@@ -30,6 +31,8 @@ export default function TopBar() {
   const navigate = useNavigate()
   const [showMenu, setShowMenu] = useState(false)
   const menuRef = useRef(null)
+  const openSupportPanel = useSupportStore((s) => s.openPanel)
+  const unreadSupport = useSupportStore((s) => user ? s.getUnreadCountForUser(user.id) : 0)
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -79,12 +82,18 @@ export default function TopBar() {
         </button>
       </div>
 
-      {/* Notifications bell (placeholder for future) */}
+      {/* Notifications bell — opens support panel */}
       <button
+        onClick={openSupportPanel}
         className="relative w-9 h-9 rounded-lg bg-dark-surface border border-dark-border flex items-center justify-center text-dark-muted hover:text-dark-text hover:bg-dark-hover transition-colors"
         title={t('nav.notifications')}
       >
         <Bell size={18} />
+        {unreadSupport > 0 && (
+          <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center px-0.5">
+            {unreadSupport > 9 ? '9+' : unreadSupport}
+          </span>
+        )}
       </button>
 
       {/* Avatar dropdown */}

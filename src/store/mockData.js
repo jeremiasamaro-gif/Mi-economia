@@ -136,8 +136,8 @@ export const CATEGORIES = [
 ]
 
 export const PLAN_LIMITS = {
-  free: { maxExpensesPerMonth: 20, hasAI: false, hasRecurring: false, hasCharts: false, hasBudgets: false, hasTags: false, hasSplitting: false, hasCsvExport: false, hasAchievements: false, hasGroups: false, hasScanner: false, hasWhatsApp: false },
-  pro: { maxExpensesPerMonth: Infinity, hasAI: true, hasRecurring: true, hasCharts: true, hasBudgets: true, hasTags: true, hasSplitting: true, hasCsvExport: true, hasAchievements: true, hasGroups: true, hasScanner: true, hasWhatsApp: true },
+  free: { maxExpensesPerMonth: 20, hasRecurring: false, hasCharts: false, hasBudgets: false, hasTags: false, hasSplitting: false, hasCsvExport: false, hasAchievements: false, hasGroups: false, hasScanner: false, hasWhatsApp: false },
+  pro: { maxExpensesPerMonth: Infinity, hasRecurring: true, hasCharts: true, hasBudgets: true, hasTags: true, hasSplitting: true, hasCsvExport: true, hasAchievements: true, hasGroups: true, hasScanner: true, hasWhatsApp: true },
 }
 
 // Achievement definitions

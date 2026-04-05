@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
-import { ScanLine, Camera, Upload, X, Loader2 } from 'lucide-react'
+import { ScanLine, Camera, Upload, X, Loader2, AlertTriangle } from 'lucide-react'
 import { scanTicket } from '../../lib/ticketScanner'
+import { validateTicketData } from '../../lib/validation/ticketValidation'
 import TicketConfirmModal from './TicketConfirmModal'
 
 const DAILY_LIMIT = 10
@@ -26,6 +27,7 @@ export default function TicketScanner({ isOpen, onClose, onExpenseAdded }) {
   const [imageUrl, setImageUrl] = useState(null)
   const [scanning, setScanning] = useState(false)
   const [scanResult, setScanResult] = useState(null)
+  const [validationWarnings, setValidationWarnings] = useState([])
   const [error, setError] = useState('')
   const fileInputRef = useRef(null)
   const videoRef = useRef(null)
@@ -48,6 +50,7 @@ export default function TicketScanner({ isOpen, onClose, onExpenseAdded }) {
     setImageFile(null)
     setImageUrl(null)
     setScanResult(null)
+    setValidationWarnings([])
     setError('')
     onClose()
   }
@@ -103,10 +106,36 @@ export default function TicketScanner({ isOpen, onClose, onExpenseAdded }) {
     if (!imageFile || !canScan) return
     setScanning(true)
     setError('')
+    setValidationWarnings([])
     try {
-      const result = await scanTicket(imageFile)
+      const rawResult = await scanTicket(imageFile)
       incrementDailyUsage()
-      setScanResult(result)
+
+      // Validate & sanitize OCR/AI output before showing to user
+      const validation = validateTicketData(rawResult)
+
+      if (!validation.valid) {
+        // Critical errors — can't proceed
+        setError(validation.errors.join('. '))
+        return
+      }
+
+      // Pass validated data (sanitized) to the confirm modal
+      // Merge warnings + errors (non-critical) for user review
+      setValidationWarnings([...validation.errors, ...validation.warnings])
+      setScanResult({
+        ...validation.data,
+        // Preserve original fields the confirm modal uses
+        total: validation.data.total,
+        store: validation.data.store,
+        date: validation.data.date,
+        category: validation.data.category,
+        confidence: validation.data.confidence,
+        razonSocial: validation.data.razonSocial,
+        businessFound: validation.data.businessFound,
+        totalNotFound: rawResult.totalNotFound,
+        ocrText: rawResult.ocrText, // raw text for debugging (display only)
+      })
     } catch (err) {
       setError(err.message)
     } finally {
@@ -229,12 +258,14 @@ export default function TicketScanner({ isOpen, onClose, onExpenseAdded }) {
       {scanResult && (
         <TicketConfirmModal
           result={scanResult}
+          warnings={validationWarnings}
           onConfirm={(expense) => {
             onExpenseAdded?.(expense)
             setScanResult(null)
+            setValidationWarnings([])
             handleClose()
           }}
-          onCancel={() => setScanResult(null)}
+          onCancel={() => { setScanResult(null); setValidationWarnings([]) }}
         />
       )}
     </>
