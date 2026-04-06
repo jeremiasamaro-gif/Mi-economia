@@ -103,7 +103,7 @@ const useAdminStore = create((set, get) => ({
     const totalUsers = realUsers.length
     const proUsers = realUsers.filter((u) => u.plan === 'pro').length
     const freeUsers = realUsers.filter((u) => u.plan === 'free').length
-    const estimatedMRR = proUsers * 2999
+    const estimatedMRR = proUsers * 7500
 
     const oneWeekAgo = new Date()
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)

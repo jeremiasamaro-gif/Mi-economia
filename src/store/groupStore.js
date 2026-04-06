@@ -82,7 +82,8 @@ const useGroupStore = create((set, get) => ({
     )
     if (existingInvite) return { error: 'Ya hay una invitación pendiente para ese email.' }
 
-    const token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
+    // BUG-021 FIX: use crypto.randomUUID() instead of weak Math.random()
+    const token = crypto.randomUUID() + crypto.randomUUID().slice(0, 8)
     const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString()
 
     const invite = {

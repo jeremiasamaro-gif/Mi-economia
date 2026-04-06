@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, Check } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
@@ -28,6 +28,7 @@ export default function HeroRegisterForm({ onLegalClick }) {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const submittingRef = useRef(false) // BUG-022 FIX: prevent double-submit race
 
   const strength = getStrength(password)
   const strengthLabel = strength <= 1
@@ -47,6 +48,7 @@ export default function HeroRegisterForm({ onLegalClick }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (submittingRef.current) return // BUG-022 FIX: block concurrent submissions
     setError('')
 
     const trimmedName = fullName.trim().slice(0, 80)
@@ -69,8 +71,10 @@ export default function HeroRegisterForm({ onLegalClick }) {
     }
 
     setLoading(true)
+    submittingRef.current = true
     try {
-      const success = await register(trimmedEmail, trimmedPassword, trimmedName)
+      const trimmedPhone = phone.trim().slice(0, 20) || null
+      const success = await register(trimmedEmail, trimmedPassword, trimmedName, trimmedPhone)
       if (success) {
         navigate('/app')
       } else {
@@ -78,6 +82,7 @@ export default function HeroRegisterForm({ onLegalClick }) {
       }
     } finally {
       setLoading(false)
+      submittingRef.current = false
     }
   }
 

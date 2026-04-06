@@ -9,8 +9,11 @@ function d(year, month, day) {
   return new Date(year, month, day).toISOString().split('T')[0]
 }
 
+// DEV ONLY — single dev password for all mock users. Remove before production.
+const DEV_PASSWORD = 'Demo1234'
+
 export const mockUsers = [
-  // Admin — credentials NOT shown on login screen
+  // DEV ONLY — remove before production
   {
     id: 'user-admin',
     email: 'jeremias@mieconomia.com',
@@ -20,9 +23,9 @@ export const mockUsers = [
     mp_payment_id: null,
     subscription_status: 'active',
     created_at: '2025-11-15T10:00:00Z',
-    password: 'Jere12345',
+    _devPassword: DEV_PASSWORD,
   },
-  // Demo users — shown on login screen for testing
+  // DEV ONLY — remove before production
   {
     id: 'user-demo-pro',
     email: 'demo-pro@mieconomia.com',
@@ -32,7 +35,9 @@ export const mockUsers = [
     mp_payment_id: 'MP-DEMO',
     subscription_status: 'active',
     created_at: '2026-01-01T10:00:00Z',
+    _devPassword: DEV_PASSWORD,
   },
+  // DEV ONLY — remove before production
   {
     id: 'user-demo-free',
     email: 'demo-free@mieconomia.com',
@@ -42,6 +47,7 @@ export const mockUsers = [
     mp_payment_id: null,
     subscription_status: 'inactive',
     created_at: '2026-01-01T10:00:00Z',
+    _devPassword: DEV_PASSWORD,
   },
 ]
 
@@ -117,9 +123,9 @@ export const mockFeatureFlags = [
 ]
 
 export const mockPayments = [
-  { id: 'pay-1', user_id: 'user-demo-pro', user_email: 'maria@ejemplo.com', amount: 2999, status: 'approved', date: '2026-02-15T10:00:00Z', mp_payment_id: 'MP-12345' },
-  { id: 'pay-2', user_id: 'user-2', user_email: 'juan@ejemplo.com', amount: 2999, status: 'approved', date: '2026-02-20T14:30:00Z', mp_payment_id: 'MP-12346' },
-  { id: 'pay-3', user_id: 'user-3', user_email: 'ana@ejemplo.com', amount: 2999, status: 'pending', date: '2026-03-10T09:00:00Z', mp_payment_id: 'MP-12347' },
+  { id: 'pay-1', user_id: 'user-demo-pro', user_email: 'maria@ejemplo.com', amount: 7500, status: 'approved', date: '2026-02-15T10:00:00Z', mp_payment_id: 'MP-12345' },
+  { id: 'pay-2', user_id: 'user-2', user_email: 'juan@ejemplo.com', amount: 7500, status: 'approved', date: '2026-02-20T14:30:00Z', mp_payment_id: 'MP-12346' },
+  { id: 'pay-3', user_id: 'user-3', user_email: 'ana@ejemplo.com', amount: 7500, status: 'pending', date: '2026-03-10T09:00:00Z', mp_payment_id: 'MP-12347' },
 ]
 
 export const CATEGORIES = [

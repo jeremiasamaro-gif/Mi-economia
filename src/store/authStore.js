@@ -6,6 +6,30 @@ import { mockUsers } from './mockData'
 // Track registered users separately (visible in admin panel)
 export const registeredUsers = []
 
+// ---------------------------------------------------------------------------
+// AUTH SNAPSHOT — immutable copy of auth state at login time.
+// Components read from this snapshot via isPro()/isAdmin().
+// The snapshot is FROZEN — client-side mutations have no effect.
+// ---------------------------------------------------------------------------
+let _authSnapshot = null
+
+function createSnapshot(user) {
+  if (!user) return null
+  return Object.freeze({
+    id: user.id,
+    email: user.email,
+    full_name: user.full_name,
+    plan: user.plan,
+    role: user.role,
+    subscription_status: user.subscription_status,
+    trial_ends_at: user.trial_ends_at || null,
+    mp_payment_id: user.mp_payment_id || null,
+  })
+}
+
+// Generic error message — NEVER reveal if email exists or password is wrong
+const GENERIC_AUTH_ERROR = 'Credenciales inválidas'
+
 const useAuthStore = create((set, get) => ({
   user: null,
   loading: false,
@@ -15,26 +39,29 @@ const useAuthStore = create((set, get) => ({
     set({ loading: true, error: null })
     // TODO SUPABASE: replace with supabase.auth.signInWithPassword({ email, password })
 
-    // Check mock users (admin + demo)
+    // Check mock users (admin + demo) — all require _devPassword match
     const found = mockUsers.find((u) => u.email === email)
     if (found) {
-      // Admin requires correct password
-      if (found.role === 'admin') {
-        if (found.password && found.password !== password) {
-          set({ error: 'Credenciales inválidas', loading: false })
-          return false
-        }
+      if (found._devPassword && found._devPassword !== password) {
+        set({ error: GENERIC_AUTH_ERROR, loading: false })
+        return false
       }
-      // Demo users accept any password
+      if (!found._devPassword) {
+        // No password set = reject login (should never happen with DEV_PASSWORD)
+        set({ error: GENERIC_AUTH_ERROR, loading: false })
+        return false
+      }
+      _authSnapshot = createSnapshot(found)
       set({ user: found, loading: false })
       return true
     }
 
-    // Check registered users
+    // Check registered users — strict password check
     const registered = registeredUsers.find((u) => u.email === email)
     if (registered) {
       if (registered.password !== password) {
-        set({ error: 'Contraseña incorrecta', loading: false })
+        // Same generic error — never reveal "email exists but password wrong"
+        set({ error: GENERIC_AUTH_ERROR, loading: false })
         return false
       }
       // Check if trial has expired
@@ -45,11 +72,13 @@ const useAuthStore = create((set, get) => ({
           registered.trial_ends_at = null
         }
       }
+      _authSnapshot = createSnapshot(registered)
       set({ user: registered, loading: false })
       return true
     }
 
-    set({ error: 'Credenciales inválidas', loading: false })
+    // Same generic error for non-existent emails
+    set({ error: GENERIC_AUTH_ERROR, loading: false })
     return false
   },
 
@@ -57,11 +86,11 @@ const useAuthStore = create((set, get) => ({
     set({ loading: true, error: null })
     // TODO SUPABASE: replace with supabase.auth.signUp({ email, password, options: { data: { full_name: fullName } } })
 
-    // Check if email exists in mock or registered users
+    // Check if email exists — use same generic error to avoid email enumeration
     const existsMock = mockUsers.find((u) => u.email === email)
     const existsRegistered = registeredUsers.find((u) => u.email === email)
     if (existsMock || existsRegistered) {
-      set({ error: 'El email ya está registrado', loading: false })
+      set({ error: GENERIC_AUTH_ERROR, loading: false })
       return false
     }
 
@@ -71,7 +100,7 @@ const useAuthStore = create((set, get) => ({
     trialEnd.setDate(trialEnd.getDate() + 7)
 
     const newUser = {
-      id: `user-${Date.now()}`,
+      id: `user-${crypto.randomUUID()}`,
       email,
       full_name: fullName,
       phone,
@@ -85,37 +114,42 @@ const useAuthStore = create((set, get) => ({
       created_at: new Date().toISOString(),
     }
     registeredUsers.push(newUser)
+    _authSnapshot = createSnapshot(newUser)
     set({ user: newUser, loading: false })
     return true
   },
 
   logout: () => {
     // TODO SUPABASE: replace with supabase.auth.signOut()
+    _authSnapshot = null
     set({ user: null, error: null })
   },
 
   clearError: () => set({ error: null }),
 
-  isAdmin: () => get().user?.role === 'admin',
+  // Read from FROZEN snapshot — immune to DevTools mutation
+  isAdmin: () => _authSnapshot?.role === 'admin',
+
   // Pro = paid pro OR active trial (mirrors server-side get_effective_plan)
   isPro: () => {
-    const user = get().user
-    if (!user) return false
-    if (user.plan === 'pro' && user.subscription_status === 'active') return true
-    if (user.subscription_status === 'trial' && user.trial_ends_at) {
-      return new Date(user.trial_ends_at) > new Date()
+    if (!_authSnapshot) return false
+    if (_authSnapshot.plan === 'pro' && _authSnapshot.subscription_status === 'active') return true
+    if (_authSnapshot.subscription_status === 'trial' && _authSnapshot.trial_ends_at) {
+      return new Date(_authSnapshot.trial_ends_at) > new Date()
     }
     return false
   },
 
-  // Trial helpers
-  isTrial: () => get().user?.subscription_status === 'trial',
+  // Trial helpers — also read from snapshot
+  isTrial: () => _authSnapshot?.subscription_status === 'trial',
   trialDaysLeft: () => {
-    const user = get().user
-    if (user?.subscription_status !== 'trial' || !user?.trial_ends_at) return 0
-    const diff = new Date(user.trial_ends_at) - new Date()
+    if (_authSnapshot?.subscription_status !== 'trial' || !_authSnapshot?.trial_ends_at) return 0
+    const diff = new Date(_authSnapshot.trial_ends_at) - new Date()
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
   },
+
+  // Expose snapshot for read-only access (e.g., plan checks in other stores)
+  getSnapshot: () => _authSnapshot,
 }))
 
 export default useAuthStore

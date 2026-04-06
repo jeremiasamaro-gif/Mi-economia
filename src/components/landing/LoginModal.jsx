@@ -6,6 +6,25 @@ import { useTranslation } from '../../hooks/useTranslation'
 
 const MAX_ATTEMPTS = 5
 const LOCK_DURATION_MS = 15 * 60 * 1000
+const LOCK_STORAGE_KEY = 'mi-economia-login-lock'
+
+// BUG-008 FIX: persist rate limit in localStorage so refresh doesn't reset it
+function getLoginLock() {
+  try {
+    const data = JSON.parse(localStorage.getItem(LOCK_STORAGE_KEY) || '{}')
+    if (data.lockUntil && Date.now() >= data.lockUntil) {
+      localStorage.removeItem(LOCK_STORAGE_KEY)
+      return { attempts: 0, lockUntil: null }
+    }
+    return { attempts: data.attempts || 0, lockUntil: data.lockUntil || null }
+  } catch { return { attempts: 0, lockUntil: null } }
+}
+
+function persistLoginLock(attempts, lockUntil) {
+  try {
+    localStorage.setItem(LOCK_STORAGE_KEY, JSON.stringify({ attempts, lockUntil }))
+  } catch { /* ignore */ }
+}
 
 export default function LoginModal({ isOpen, onClose }) {
   const { login } = useAuth()
@@ -16,13 +35,16 @@ export default function LoginModal({ isOpen, onClose }) {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [attempts, setAttempts] = useState(0)
-  const [lockUntil, setLockUntil] = useState(null)
+
+  // BUG-008 FIX: read persisted lock state
+  const lock = getLoginLock()
+  const [attempts, setAttempts] = useState(lock.attempts)
+  const [lockUntil, setLockUntil] = useState(lock.lockUntil)
 
   if (!isOpen) return null
 
   const isLocked = lockUntil && Date.now() < lockUntil
-  const lockMinutes = isLocked ? Math.ceil((lockUntil - Date.now()) / 60000) : 0
+  const lockMinutes = isLocked ? Math.max(1, Math.ceil((lockUntil - Date.now()) / 60000)) : 0
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -42,15 +64,20 @@ export default function LoginModal({ isOpen, onClose }) {
     try {
       const success = await login(trimmedEmail, trimmedPassword)
       if (success) {
+        // Clear lock on successful login
+        localStorage.removeItem(LOCK_STORAGE_KEY)
         onClose()
         navigate('/app')
       } else {
         const newAttempts = attempts + 1
         setAttempts(newAttempts)
         if (newAttempts >= MAX_ATTEMPTS) {
-          setLockUntil(Date.now() + LOCK_DURATION_MS)
+          const newLockUntil = Date.now() + LOCK_DURATION_MS
+          setLockUntil(newLockUntil)
+          persistLoginLock(newAttempts, newLockUntil)
           setError(t('landing.login.locked', { minutes: 15 }))
         } else {
+          persistLoginLock(newAttempts, null)
           setError(t('landing.login.genericError'))
         }
       }

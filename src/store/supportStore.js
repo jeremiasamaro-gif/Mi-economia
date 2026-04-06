@@ -8,6 +8,24 @@ const ADMIN_EMAIL = 'jeremias@mieconomia.com'
 const MAX_MESSAGE_LENGTH = 1000
 const RATE_LIMIT_MAX = 10 // messages per hour
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
+const SUPPORT_RATE_KEY = 'mi-economia-support-rate'
+
+// BUG-011 FIX: persist rate limit in localStorage so refresh doesn't reset it
+function getSupportRateLog() {
+  try {
+    const data = JSON.parse(localStorage.getItem(SUPPORT_RATE_KEY) || '[]')
+    const now = Date.now()
+    return data.filter((ts) => now - ts < RATE_LIMIT_WINDOW_MS)
+  } catch { return [] }
+}
+
+function addSupportRateEntry() {
+  try {
+    const log = getSupportRateLog()
+    log.push(Date.now())
+    localStorage.setItem(SUPPORT_RATE_KEY, JSON.stringify(log))
+  } catch { /* ignore */ }
+}
 
 // Mock conversations for development
 const mockConversations = [
@@ -101,7 +119,6 @@ const useSupportStore = create((set, get) => ({
   notifications: [],
   isPanelOpen: false,
   activeConversationId: null,
-  rateLimitLog: [], // timestamps of recent messages by current user
 
   // --- Panel ---
   openPanel: () => set({ isPanelOpen: true }),
@@ -139,11 +156,9 @@ const useSupportStore = create((set, get) => ({
     return get().messages[conversationId] || []
   },
 
-  // Check rate limit: max 10 messages per hour
+  // BUG-011 FIX: check rate limit from localStorage (persists across refresh)
   canSendMessage: () => {
-    const now = Date.now()
-    const recent = get().rateLimitLog.filter((ts) => now - ts < RATE_LIMIT_WINDOW_MS)
-    return recent.length < RATE_LIMIT_MAX
+    return getSupportRateLog().length < RATE_LIMIT_MAX
   },
 
   // Send message as user
@@ -178,8 +193,10 @@ const useSupportStore = create((set, get) => ({
           ? { ...c, last_message_at: msg.created_at, unread_by_admin: true, status: 'open' }
           : c
       ),
-      rateLimitLog: [...s.rateLimitLog.filter((ts) => Date.now() - ts < RATE_LIMIT_WINDOW_MS), Date.now()],
     }))
+
+    // BUG-011 FIX: persist rate limit entry
+    addSupportRateEntry()
 
     return true
   },
