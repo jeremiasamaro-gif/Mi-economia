@@ -4,8 +4,14 @@
     {
       "name": "dev",
       "runtimeExecutable": "/Users/jeremiasamaro/.local/node/bin/node",
-      "runtimeArgs": ["./node_modules/.bin/vite", "--host"],
-      "port": 5173
+      "runtimeArgs": ["./node_modules/.bin/vite", "--host", "--port", "5175", "--strictPort"],
+      "port": 5175
+    },
+    {
+      "name": "obras-dev",
+      "runtimeExecutable": "/Users/jeremiasamaro/.local/node/bin/node",
+      "runtimeArgs": ["/Users/jeremiasamaro/ObrasApp/start-dev.js", "--host", "--port", "5174", "--strictPort"],
+      "port": 5174
     }
   ]
 }

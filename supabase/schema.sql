@@ -204,6 +204,39 @@ comment on table public.payments is
   'Payment log — every MercadoPago webhook is recorded for audit.';
 
 
+-- --------------------------------------------------------------------------
+-- 9. INSTALLMENT PLANS (cuotas)
+-- --------------------------------------------------------------------------
+
+create table if not exists public.installment_plans (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  description text not null,
+  category text not null,
+  total_amount numeric(12, 2) not null check (total_amount > 0),
+  installment_amount numeric(12, 2) not null check (installment_amount > 0),
+  total_installments integer not null check (total_installments >= 2 and total_installments <= 48),
+  paid_installments integer not null default 0,
+  payment_method text check (payment_method in ('efectivo', 'debito', 'credito', 'transferencia', 'mercadopago')),
+  start_date text not null,
+  next_due_date text not null,
+  status text not null default 'active' check (status in ('active', 'completed', 'cancelled')),
+  tags text[] default '{}',
+  created_at timestamptz not null default now()
+);
+
+create index idx_installment_plans_user on public.installment_plans (user_id, status);
+
+comment on table public.installment_plans is
+  'Installment payment plans (cuotas). Each plan generates monthly expense entries.';
+
+-- Add installment columns to expenses
+alter table public.expenses
+  add column if not exists payment_method text check (payment_method in ('efectivo', 'debito', 'credito', 'transferencia', 'mercadopago')),
+  add column if not exists installment_id uuid references public.installment_plans(id),
+  add column if not exists installment_number integer;
+
+
 -- ==========================================================================
 -- ROW LEVEL SECURITY (RLS)
 -- ==========================================================================
@@ -327,6 +360,12 @@ alter table public.payments enable row level security;
 
 create policy "Users can see own payments"
   on public.payments for select using (auth.uid() = user_id);
+
+-- Installment Plans
+alter table public.installment_plans enable row level security;
+
+create policy "Users can CRUD own installment plans"
+  on public.installment_plans for all using (auth.uid() = user_id);
 
 
 -- ==========================================================================

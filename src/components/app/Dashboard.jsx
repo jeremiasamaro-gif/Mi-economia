@@ -8,6 +8,7 @@ import { useTranslation } from '../../hooks/useTranslation'
 import UpgradeModal from '../shared/UpgradeModal'
 import GroupDashboard from './GroupDashboard'
 import EstadoResultados from './EstadoResultados'
+import InstallmentDashboard from './InstallmentDashboard'
 
 const COLORS = ['#4ade80', '#f97316', '#3b82f6', '#a855f7', '#ef4444', '#eab308', '#06b6d4', '#ec4899', '#84cc16', '#6366f1']
 
@@ -53,7 +54,10 @@ export default function Dashboard() {
 
   // Weighted projection: 60% current pace + 40% last month pattern
   const currentDailyAvg = dayOfMonth > 0 ? totalExpense / dayOfMonth : 0
-  const prevDailyAvg = prevMonthTotal > 0 ? prevMonthTotal / daysInMonth : 0
+  const prevMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1
+  const prevYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+  const daysInPrevMonth = new Date(prevYear, prevMonth + 1, 0).getDate()
+  const prevDailyAvg = prevMonthTotal > 0 ? prevMonthTotal / daysInPrevMonth : 0
   const projectedDailyAvg = prevDailyAvg > 0
     ? currentDailyAvg * 0.6 + prevDailyAvg * 0.4
     : currentDailyAvg
@@ -102,6 +106,9 @@ export default function Dashboard() {
 
       {/* P&L Statement */}
       <EstadoResultados />
+
+      {/* Installment Plans */}
+      <InstallmentDashboard />
 
       {/* Charts - Pro only */}
       {canUseCharts ? (

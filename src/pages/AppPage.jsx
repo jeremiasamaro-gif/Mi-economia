@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Sidebar from '../components/shared/Sidebar'
 import TopBar from '../components/shared/TopBar'
@@ -12,10 +13,19 @@ import ProfilePage from './ProfilePage'
 import CfoPage from '../components/app/CfoPage'
 import SupportButton from '../components/support/SupportButton'
 import { usePlan } from '../hooks/usePlan'
+import { useAuth } from '../hooks/useAuth'
 import TrialBanner from '../components/shared/TrialBanner'
+import useInstallmentStore from '../store/installmentStore'
 
 export default function AppPage() {
   const { canUseBudgets, canUseRecurring, canUseAchievements, canUseGroups, canUseWhatsApp } = usePlan()
+  const { user } = useAuth()
+  const checkAndPopulate = useInstallmentStore((s) => s.checkAndPopulate)
+
+  // Auto-populate due installments on app load
+  useEffect(() => {
+    if (user?.id) checkAndPopulate()
+  }, [user?.id])
 
   return (
     <div className="flex min-h-screen bg-dark-bg">
